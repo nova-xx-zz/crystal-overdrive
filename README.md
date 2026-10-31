@@ -40,3 +40,12 @@ node --test tests/*.test.cjs
 ```
 
 検証範囲とiPhone実機確認項目は [docs/テスト方針.md](docs/テスト方針.md) を参照してください。
+
+## バランス候補の比較
+本番ルールは変更せず、ライフ・初期結晶・OD反動の候補を固定シードで比較します。
+
+```sh
+node scripts/balance-scenarios.cjs --games 100 --seed 20261031
+```
+
+比較方法と注意点は [docs/バランス比較.md](docs/バランス比較.md) を参照してください。

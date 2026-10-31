@@ -11,6 +11,40 @@ const FILES = ['cards.js', 'game.js', 'ui.js'];
 const SOURCES = FILES.map(file => ({file, source: fs.readFileSync(path.join(WEB, file), 'utf8')}));
 const MAX_TURNS = 50;
 
+const BASELINE = Object.freeze({life: 5, stock: 3, recoil: 2});
+const LIMITS = Object.freeze({life: [3, 12], stock: [1, 7], recoil: [0, 5]});
+
+// Web版には手を加えず、シミュレーション内の定数だけを差し替える。
+function normalizeScenario(scenario = BASELINE) {
+  if (!scenario || typeof scenario !== 'object' || Array.isArray(scenario)) {
+    throw new TypeError('scenario はオブジェクトで指定してください');
+  }
+  for (const key of Object.keys(scenario)) {
+    if (!Object.hasOwn(LIMITS, key)) throw new Error('未対応のシナリオ項目: ' + key);
+  }
+  const resolved = {...BASELINE, ...scenario};
+  for (const [key, [min, max]] of Object.entries(LIMITS)) {
+    if (!Number.isInteger(resolved[key]) || resolved[key] < min || resolved[key] > max) {
+      throw new RangeError(key + ' は ' + min + '〜' + max + ' の整数で指定してください');
+    }
+  }
+  return resolved;
+}
+
+function cardsForScenario(scenario = BASELINE) {
+  const values = normalizeScenario(scenario);
+  let source = SOURCES.find(item => item.file === 'cards.js').source;
+  for (const [name, value] of [
+    ['START_LIFE', values.life], ['START_STOCK', values.stock], ['OD_RECOIL', values.recoil],
+  ]) {
+    const pattern = new RegExp('\\b' + name + '\\s*=\\s*\\d+', 'g');
+    const matches = [...source.matchAll(pattern)];
+    if (matches.length !== 1) throw new Error('定数の定義が想定と異なります: ' + name);
+    source = source.replace(pattern, name + '=' + value);
+  }
+  return source;
+}
+
 function makeRandom(seed) {
   let value = seed >>> 0;
   return () => {
@@ -19,8 +53,9 @@ function makeRandom(seed) {
   };
 }
 
-async function runMatch(seed, policy = 'rush') {
+async function runMatch(seed, policy = 'rush', scenario = BASELINE) {
   if (!['rush', 'reserve'].includes(policy)) throw new Error('不明な方針: ' + policy);
+  const cardsSource = cardsForScenario(scenario);
   const rng = Object.create(Math);
   rng.random = makeRandom(seed);
   const elements = new Map();
@@ -32,7 +67,9 @@ async function runMatch(seed, policy = 'rush') {
     },
   };
   const ctx = vm.createContext({document, Math: rng, setTimeout: fn => { fn(); return 0; }});
-  for (const {file, source} of SOURCES) vm.runInContext(source, ctx, {filename: file});
+  for (const {file, source} of SOURCES) {
+    vm.runInContext(file === 'cards.js' ? cardsSource : source, ctx, {filename: file});
+  }
 
   // 非同期のCPU攻撃でモーダル待ちにしない。自動プレイヤーも勝てるブロックを優先する。
   vm.runInContext(`askBlock = function(att) {
@@ -111,16 +148,17 @@ async function runMatch(seed, policy = 'rush') {
   };
 }
 
-async function runReport({games = 100, seed = 20261031, policies = ['rush','reserve']} = {}) {
+async function runReport({games = 100, seed = 20261031, policies = ['rush','reserve'], scenario = BASELINE} = {}) {
   if (!Number.isInteger(games) || games < 1 || games > 5000) throw new Error('games は1〜5000にしてください');
   if (!Number.isInteger(seed)) throw new Error('seed は整数にしてください');
-  const report = {seed, gamesPerPolicy: games, policies: {}};
+  const values = normalizeScenario(scenario);
+  const report = {seed, gamesPerPolicy: games, scenario: values, policies: {}};
   for (const policy of policies) {
     const counts = {player: 0, cpu: 0, timeout: 0};
     let turnsSum = 0;
     let minTurns = Infinity, maxTurns = -Infinity;
     for (let i = 0; i < games; i++) {
-      const result = await runMatch(seed + i, policy);
+      const result = await runMatch(seed + i, policy, values);
       const outcome = result.winner==='p' ? 'player' : (result.winner==='c' ? 'cpu' : 'timeout');
       counts[outcome]++;
       turnsSum += result.turns;
@@ -138,4 +176,4 @@ async function runReport({games = 100, seed = 20261031, policies = ['rush','rese
   return report;
 }
 
-module.exports = {runMatch, runReport};
+module.exports = {BASELINE, normalizeScenario, cardsForScenario, runMatch, runReport};
