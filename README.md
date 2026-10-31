@@ -32,6 +32,21 @@ Web版の対戦画面では「カード」ボタンから全12種の効果を確
 ## ローカルで遊ぶ
 `web/index.html` をブラウザで開くだけで動きます。
 
+## iOSアプリの動作確認（Capacitor 8）
+Web版をWKWebViewへ同梱する設定を追加しています。Mac（Xcode 26以降、Node.js 22以降）で次を実行します。
+
+```sh
+npm install
+npm test
+npm run ios:add     # 初回のみ
+npm run ios:sync
+npm run ios:open
+```
+
+Xcodeの実行先にiPhoneシミュレーターを選んでRunしてください。
+詳しい実機手順は [docs/iOS起動手順.md](docs/iOS起動手順.md) を参照してください。
+生成されたネイティブ `ios/` プロジェクトと `package-lock.json` は次のPRでGit管理します。
+
 ## 自動テスト
 Node.js 22以上で、追加パッケージなしで実行できます。
 
