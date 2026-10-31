@@ -6,10 +6,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-// Web試作版は単一HTMLのため、ブラウザを起動せずゲームロジックを検証する。
-const html = fs.readFileSync(path.join(__dirname, '..', 'web', 'index.html'), 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/);
-if (!script) throw new Error('web/index.html にゲームスクリプトがありません');
+// HTMLで指定された順に外部スクリプトを読み込む。Nodeではブラウザを起動せずテストする。
+const WEB_DIR = path.join(__dirname, '..', 'web');
+const html = fs.readFileSync(path.join(WEB_DIR, 'index.html'), 'utf8');
+const scriptSources = [...html.matchAll(/<script\s+src="([^"]+)"\s*><\/script>/g)]
+  .map(match => match[1]);
+const expectedScripts = ['./cards.js', './game.js', './ui.js'];
+if (JSON.stringify(scriptSources) !== JSON.stringify(expectedScripts)) {
+  throw new Error('Web版のスクリプト読み込み順が想定と異なります');
+}
 
 function boot() {
   const timers = [];
@@ -26,7 +31,10 @@ function boot() {
     document,
     setTimeout(callback) { timers.push(callback); },
   });
-  vm.runInContext(script[1], context, { filename: 'web/index.html' });
+  for (const src of scriptSources) {
+    const filename = path.join(WEB_DIR, src);
+    vm.runInContext(fs.readFileSync(filename, 'utf8'), context, { filename: src });
+  }
   return {
     timers,
     run: (code) => vm.runInContext(code, context),
@@ -147,4 +155,28 @@ test('カードを選択して対象ユニットを指定するとマジック�
   assert.equal(run('S.c.units[0].tired'), true);
   assert.equal(run('S.p.stock'), 8);
   assert.equal(run('S.p.hot'), 2);
+});
+
+test('HTMLがCSSとスクリプト3本を正しい順で参照している', () => {
+  assert.match(html, /<link rel="stylesheet" href="\.\/styles\.css">/);
+  assert.deepEqual(scriptSources, ['./cards.js', './game.js', './ui.js']);
+  assert.match(fs.readFileSync(path.join(WEB_DIR, 'styles.css'), 'utf8'), /\.unit\.od/);
+  assert.doesNotMatch(html, /<script>([\s\S]*?)<\/script>/);
+});
+
+test('カード定義と対戦処理を画面なしで読み込める', () => {
+  const context = vm.createContext({});
+  for (const src of ['./cards.js', './game.js']) {
+    vm.runInContext(fs.readFileSync(path.join(WEB_DIR, src), 'utf8'), context, { filename: src });
+  }
+  assert.equal(vm.runInContext("power({id:'risu', cr:1})", context), 2);
+  assert.equal(vm.runInContext("power({id:'risu', cr:2})", context), 3);
+  assert.equal(vm.runInContext("power({id:'risu', cr:3})", context), 5);
+});
+
+test('分離後も起動時に対戦画面が初期描画される', () => {
+  const { html: getHTML } = boot();
+  assert.match(getHTML('app'), /結晶オーバードライブ/);
+  assert.match(getHTML('app'), /攻撃フェイズへ/);
+  assert.match(getHTML('app'), /中央プール/);
 });
