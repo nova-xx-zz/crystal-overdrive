@@ -115,6 +115,16 @@ h1{font-family:var(--display);font-weight:400;font-size:17px;margin:0;letter-spa
 .modal-box ul{margin:0;padding-left:1.2em}
 .modal-box li{margin:2px 0}
 .choice{display:flex;justify-content:space-between;gap:8px;text-align:left}
+.catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.catalog-card{min-width:0;border:1px solid var(--line);border-radius:10px;background:#101730;padding:9px;display:flex;flex-direction:column;gap:5px}
+.catalog-top{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.catalog-symbol{font-family:var(--display);font-size:20px}
+.catalog-cost{font-size:10px;font-weight:900;color:var(--crystal)}
+.catalog-name{font-weight:900;overflow-wrap:anywhere}
+.catalog-meta{font-size:10px;color:var(--crystal)}
+.catalog-desc{font-size:11px;color:var(--mute);line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:360px){header{flex-wrap:wrap}.catalog{grid-template-columns:1fr}}
+
 .res-win{color:var(--crystal)} .res-lose{color:var(--danger)}
 
 @media (prefers-reduced-motion: reduce){
@@ -203,11 +213,14 @@ function startTurn(s){
 }
 function canPlay(s,i){
   const P=S[s], d=card(P.hand[i]);
+  if(!d) return false;
   if(d.type==='unit') return P.stock >= d.cost+1 && P.units.length < MAX_UNITS;
-  return P.stock >= d.cost;
+  return P.stock >= d.cost && (!d.target || S[other(s)].units.length > 0);
 }
 function playCard(s,i,targetUid){
   const P=S[s], id=P.hand[i], d=card(id);
+  if(!d || !canPlay(s,i)) return false;
+  if(d.target && !S[other(s)].units.some(u=>u.uid===targetUid)) return false;
   P.hand.splice(i,1);
   P.stock -= d.cost; P.hot += d.cost;
   if(d.type==='unit'){
@@ -225,6 +238,7 @@ function playCard(s,i,targetUid){
     if(d.fx==='shatter'){ const u=O.units.find(x=>x.uid===targetUid); if(u) removeToPool(os,u,2); }
     if(d.fx==='freeze'){ const u=O.units.find(x=>x.uid===targetUid); if(u){ u.tired=true; log(`${card(u.id).name}は疲労した`); } }
   }
+  return true;
 }
 function removeToPool(s,u,n){
   const k=Math.min(n,u.cr); u.cr-=k; S.pool+=k;
@@ -430,8 +444,10 @@ function detailHTML(){
         <div class="btns"><button class="btn primary" data-act="play" ${ok?'':'disabled'}>召喚する</button></div>
         ${!ok && myMain() && why?`<div class="hint">${why}</div>`:''}`;
     }
+    const targetHint = d.target && !S.c.units.length && myMain()
+      ? '<div class="hint">対象となる相手ユニットがいません。</div>' : '';
     return `<h2>${esc(d.name)}<small>マジック・コスト${d.cost}</small></h2><div class="fx">${FX_TEXT[d.fx]}</div>
-      <div class="btns"><button class="btn primary" data-act="play" ${ok?'':'disabled'}>使う</button></div>`;
+      <div class="btns"><button class="btn primary" data-act="play" ${ok?'':'disabled'}>使う</button></div>${targetHint}`;
   }
   if(sel && sel.kind==='unit'){
     const P=S[sel.side], u=P.units.find(x=>x.uid===sel.uid);
@@ -464,6 +480,30 @@ function handHTML(){
 }
 function modalHTML(){
   const m=S.modal; if(!m) return '';
+  if(m==='catalog'){
+    const items = Object.values(CARDS).map(d=>{
+      const summary = d.type==='unit'
+        ? `Lv1 ${d.pow[0]} / Lv2 ${d.pow[1]}（結晶${d.lv2}〜） / 上限${d.cap}`
+        : FX_TEXT[d.fx];
+      const effect = d.type==='unit'
+        ? `OD：パワー+${d.od}・${FX_TEXT[d.odFx]}${d.onSummon?` / ${FX_TEXT[d.onSummon]}`:''}`
+        : '';
+      return `<div class="catalog-card ${d.attr}">
+        <div class="catalog-top"><span class="catalog-symbol sig">${esc(d.sig)}</span><span class="catalog-cost">COST ${d.cost}</span></div>
+        <div class="catalog-name">${esc(d.name)}</div>
+        <div class="catalog-meta">${d.type==='unit'?'ユニット':'マジック'}</div>
+        <div class="catalog-desc">${esc(summary)}</div>
+        ${effect?`<div class="catalog-desc">${esc(effect)}</div>`:''}
+      </div>`;
+    }).join('');
+    return `<div class="modal" role="dialog" aria-modal="true" aria-label="カード一覧"><div class="modal-box">
+      <h3>カード一覧（全${Object.keys(CARDS).length}種）</h3>
+      <div class="hint">試作版の収録カードを確認できます。</div>
+      <div class="catalog">${items}</div>
+      <button class="btn primary" data-act="closeModal">閉じる</button>
+    </div></div>`;
+  }
+
   if(m==='rules') return `<div class="modal"><div class="modal-box">
     <h3>遊び方</h3>
     <ul>
@@ -505,7 +545,7 @@ function render(){
   const logs=S.log.slice(-3).map(t=>`<div>${esc(t)}</div>`).join('');
   document.getElementById('app').innerHTML = `
     <header><h1>結晶オーバードライブ</h1>
-      <div style="display:flex;gap:6px"><button class="small-btn" data-act="rules">遊び方</button><button class="small-btn" data-act="restart">最初から</button></div></header>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end"><button class="small-btn" data-act="catalog">カード</button><button class="small-btn" data-act="rules">遊び方</button><button class="small-btn" data-act="restart">最初から</button></div></header>
     ${resBar('c')}
     ${fieldHTML('c')}
     <div class="center">
@@ -534,6 +574,7 @@ document.addEventListener('click', async e=>{
     const uid=b.dataset.uid ? +b.dataset.uid : null;
     r(uid ? S.p.units.find(u=>u.uid===uid) : null); return;
   }
+  if(act==='catalog'){ S.modal='catalog'; render(); return; }
   if(act==='rules'){ S.modal='rules'; render(); return; }
   if(act==='closeModal'){ S.modal=null; render(); return; }
   if(act==='restart'){ if(S.blockResolve){ const r=S.blockResolve; S.blockResolve=null; r(null); } S.modal=null; uidN=1; newGame(); return; }
