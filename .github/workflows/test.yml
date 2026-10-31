@@ -6,12 +6,14 @@ on:
     paths:
       - 'web/**'
       - 'tests/**'
+      - 'scripts/**'
       - '.github/workflows/test.yml'
   push:
     branches: [develop]
     paths:
       - 'web/**'
       - 'tests/**'
+      - 'scripts/**'
       - '.github/workflows/test.yml'
 
 permissions:
@@ -27,3 +29,5 @@ jobs:
           node-version: '22'
       - name: ゲームロジックの回帰テスト
         run: node --test tests/*.test.cjs
+      - name: CPU対戦シミュレーション（固定シード・各100試合）
+        run: node scripts/balance-report.cjs --games 100 --seed 20261031

@@ -204,3 +204,45 @@ test('iPhone用CSSに下部固定操作・セーフエリア・タップ領域�
   assert.match(styles, /\.choice\{[^}]*min-height:52px/);
   assert.match(styles, /\.btn\{[^}]*min-height:44px/);
 });
+
+test('CPUは防御可能なら最小限のパワーで有利なブロックを行う', () => {
+  const { run } = boot();
+  run("S.c.units=[{uid:31,id:'koke',cr:5,tired:false,attacked:false},{uid:32,id:'pen',cr:2,tired:false,attacked:false}];");
+  assert.equal(run("cpuChooseBlock({uid:41,id:'risu',cr:1}).uid"), 32);
+});
+
+test('CPUは致死ダメージを安価なユニットでブロックしライフを守る', () => {
+  const { run } = boot();
+  run("S.c.life=1; S.c.units=[{uid:30,id:'shimo',cr:1,tired:false,attacked:false},{uid:32,id:'pen',cr:1,tired:false,attacked:false}];");
+  assert.equal(run("cpuChooseBlock({uid:41,id:'volga',cr:4}).uid"), 32);
+});
+
+test('CPUは結晶を払えないOD候補を除外する', () => {
+  const { run } = boot();
+  run("S.c.units=[{uid:31,id:'volga',cr:1,tired:false,attacked:false},{uid:32,id:'totsu',cr:3,tired:false,attacked:false}];");
+  assert.equal(run("cpuOverdriveChoice(1,2,[],0.9).u.uid"), 32);
+  assert.equal(run("cpuOverdriveChoice(0,2,[],0.1)"), null);
+});
+
+test('CPUはODで直接決着を狙えるユニットを優先する', () => {
+  const { run } = boot();
+  run("S.c.units=[{uid:31,id:'volga',cr:4,tired:false,attacked:false},{uid:32,id:'totsu',cr:3,tired:false,attacked:false}];");
+  assert.equal(run("cpuOverdriveChoice(2,2,[],0.8).u.uid"), 32);
+});
+
+test('CPUのOD判断は非緊急時の抽選と疲労状態を考慮する', () => {
+  const { run } = boot();
+  run("S.c.units=[{uid:31,id:'totsu',cr:3,tired:false,attacked:false}];");
+  assert.equal(run("cpuOverdriveChoice(1,5,[],0.9)"), null);
+  assert.equal(run("cpuOverdriveChoice(1,5,[],0.1).u.uid"), 31);
+  run('S.c.units[0].tired=true;');
+  assert.equal(run("cpuOverdriveChoice(1,2,[],0.1)"), null);
+});
+
+test('CPUのOD候補選択自体は結晶やユニットの状態を変更しない', () => {
+  const { run } = boot();
+  run("S.c.units=[{uid:31,id:'totsu',cr:3,tired:false,attacked:false}]; S.c.stock=2;");
+  run("cpuOverdriveChoice(S.c.stock,2,[],0.5);");
+  assert.equal(run('S.c.stock'), 2);
+  assert.equal(run('S.c.units[0].cr'), 3);
+});

@@ -142,12 +142,34 @@ function endGame(winner){
 function cpuChooseBlock(att){
   const C=S.c, ap=power(att), d=card(att.id);
   const dmg=(isOD(att)&&d.odFx==='pierce')?2:1;
-  const cands=C.units.filter(u=>!u.tired).sort((a,b)=>power(a)-power(b));
+  // 勝てるなら必要以上に強いユニットを使わず、最も安い戦力で受ける。
+  const cands=C.units.filter(u=>!u.tired)
+    .sort((a,b)=>card(a.id).cost-card(b.id).cost || power(a)-power(b) || a.uid-b.uid);
   if(!cands.length) return null;
-  const win=cands.find(u=>power(u)>ap); if(win) return win;
-  const tie=cands.find(u=>power(u)===ap && card(u.id).cost<=d.cost); if(tie) return tie;
+  const wins=cands.filter(u=>power(u)>ap).sort((a,b)=>power(a)-power(b) || card(a.id).cost-card(b.id).cost);
+  if(wins.length) return wins[0];
+  const ties=cands.filter(u=>power(u)===ap && (card(u.id).cost<=d.cost || C.life<=dmg));
+  if(ties.length) return ties[0];
+  // 致死ダメージは最も安いユニットを犠牲にして必ず防ぐ。
   if(C.life<=dmg || C.life<=2) return cands[0];
   return null;
+}
+
+// 投入できないユニットを候補から除外し、ODの効果・反動を点数化する。
+// 計算結果を返すだけで結晶を消費しないため、CPUテストで独立して検証できる。
+function cpuOverdriveChoice(stock, enemyLife, enemyUnits, roll){
+  if(enemyLife>2 && roll>=0.35) return null;
+  const candidates=S.c.units.filter(u=>!u.tired && !u.attacked && !isOD(u)).map(u=>{
+    const d=card(u.id), need=Math.max(0,d.cap+1-u.cr);
+    if(need>stock) return null;
+    const lethal=!enemyUnits.some(x=>!x.tired) && enemyLife<=(d.odFx==='pierce'?2:1);
+    const effect=d.odFx==='burnAll' ? enemyUnits.length*4
+      : (d.odFx==='burn' && enemyUnits.length ? 4 : 0);
+    const score=(lethal?100:0)+d.od*2+effect-need-(d.cap<=2 && !lethal?3:0);
+    return {u,need,score};
+  }).filter(Boolean);
+  candidates.sort((a,b)=>b.score-a.score || a.need-b.need || a.u.uid-b.u.uid);
+  return candidates[0] || null;
 }
 function cpuSpellTarget(id){
   const C=S.c, P=S.p, d=card(id);
@@ -185,13 +207,11 @@ async function cpuTurn(){
     const need=card(u.id).lv2-u.cr;
     if(need>0 && C.stock>=need){ C.stock-=need; u.cr+=need; }
   });
-  // オーバードライブ判断
-  const odCands=C.units.filter(u=>!u.tired && !isOD(u)).filter(u=>{
-    const d=card(u.id); return P.life<=2 || d.cap>=3; });
-  if(odCands.length && (P.life<=2 || Math.random()<0.35)){
-    const u=odCands.sort((a,b)=>card(b.id).od-card(a.id).od)[0], d=card(u.id);
-    const need=d.cap+1-u.cr;
-    if(need>0 && C.stock>=need){ C.stock-=need; u.cr+=need; log(`CPU：${d.name}をオーバードライブ`); }
+  // 手元の結晶で実行可能なODから、有効な攻撃効果を優先して選ぶ。
+  const od=cpuOverdriveChoice(C.stock,P.life,P.units,Math.random());
+  if(od && od.need>0){
+    C.stock-=od.need; od.u.cr+=od.need;
+    log(`CPU：${card(od.u.id).name}をオーバードライブ`);
   }
   render(); await sleep(600); if(!alive(g)) return;
   // 攻撃
