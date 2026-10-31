@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>結晶オーバードライブ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: one-column portrait battlefield — CPU on top, you at the bottom, controls within thumb reach */
+  --bg:#10142a;
+  --panel:#1a2144;
+  --line:#2c3670;
+  --ink:#eef1ff;
+  --mute:#9099c8;
+  --crystal:#86e8ff;
+  --hot:#ff8a3d;
+  --cool:#6a95ff;
+  --danger:#ff5d73;
+  --c-r:#ff6b5a; --c-b:#4fb2ff; --c-g:#45cf8a;
+  --display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transparent}
+body{display:flex;justify-content:center}
+button{font-family:inherit;color:inherit}
+button:focus-visible{outline:2px solid var(--crystal);outline-offset:2px}
+#app{width:100%;max-width:480px;min-height:100%;display:flex;flex-direction:column;gap:6px;padding:8px 12px 12px}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-family:var(--display);font-weight:400;font-size:17px;margin:0;letter-spacing:.04em;color:var(--crystal)}
+.small-btn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
+
+.res{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:11px;font-variant-numeric:tabular-nums}
+.res .who{font-weight:900;min-width:38px}
+.lifebar{display:flex;gap:2px;margin-right:2px}
+.gem{width:10px;height:10px;transform:rotate(45deg);border-radius:2px;background:var(--crystal);box-shadow:0 0 6px rgba(134,232,255,.6)}
+.gem.empty{background:transparent;border:1px solid var(--line);box-shadow:none}
+.chip{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
+.chip b{font-size:12px}
+.chip.stock{border-color:rgba(134,232,255,.55)} .chip.stock b{color:var(--crystal)}
+.chip.hot{border-color:rgba(255,138,61,.6)} .chip.hot b{color:var(--hot)}
+.chip.cool{border-color:rgba(106,149,255,.6)} .chip.cool b{color:var(--cool)}
+
+.field{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;min-height:118px}
+.slot{border:1px dashed var(--line);border-radius:10px;opacity:.5}
+.unit{position:relative;border-radius:10px;border:2px solid var(--line);background:var(--panel);padding:4px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-height:118px;overflow:hidden}
+.unit .sig,.card .sig{font-family:var(--display);line-height:1}
+.unit .sig{font-size:24px;margin-top:2px}
+.unit .pw{font-family:var(--display);font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums}
+.unit .lv{font-size:10px;font-weight:700;color:var(--mute)}
+.unit .nm{font-size:10px;line-height:1.2;text-align:center;min-height:24px;display:flex;align-items:center}
+.dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:auto}
+.dot{width:7px;height:7px;transform:rotate(45deg);border:1px solid var(--mute);border-radius:1px}
+.dot.on{background:var(--crystal);border-color:var(--crystal)}
+.dot.ov{border-color:var(--hot)}
+.dot.ov.on{background:var(--hot)}
+.unit.tired{filter:saturate(.25) brightness(.7)}
+.unit .tag{position:absolute;top:3px;right:3px;font-size:9px;background:#000a;padding:1px 4px;border-radius:4px}
+.unit.od{border-color:var(--hot);box-shadow:0 0 12px rgba(255,138,61,.55)}
+.unit.od .lv{color:var(--hot)}
+.unit.sel{outline:2px solid var(--ink);outline-offset:1px}
+.unit.tgt{border-color:var(--danger);animation:pulse 1s infinite}
+.unit.hit{animation:hit .45s}
+@keyframes pulse{50%{box-shadow:0 0 14px rgba(255,93,115,.8)}}
+@keyframes hit{30%{transform:translateY(-6px)}}
+.r .sig{color:var(--c-r)} .b .sig{color:var(--c-b)} .g .sig{color:var(--c-g)}
+.unit.r{background:linear-gradient(180deg,rgba(255,107,90,.16),var(--panel) 60%)}
+.unit.b{background:linear-gradient(180deg,rgba(79,178,255,.16),var(--panel) 60%)}
+.unit.g{background:linear-gradient(180deg,rgba(69,207,138,.16),var(--panel) 60%)}
+
+.center{display:flex;flex-direction:column;gap:4px;padding:6px 10px;border-radius:10px;background:#0b0f22;border:1px solid var(--line)}
+.center-top{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.phase{font-weight:900}
+.phase.you{color:var(--crystal)} .phase.cpu{color:var(--hot)}
+.pool{display:flex;align-items:center;gap:5px}
+.pool .gem{width:9px;height:9px}
+.log{font-size:11px;color:var(--mute);line-height:1.45;min-height:48px}
+.log div:last-child{color:var(--ink)}
+
+.detail{min-height:104px;padding:8px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:12px;line-height:1.5;display:flex;flex-direction:column;gap:6px}
+.detail h2{margin:0;font-size:14px;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.detail h2 small{font-weight:400;color:var(--mute);font-size:11px}
+.detail .stats{display:flex;gap:10px;flex-wrap:wrap;color:var(--mute);font-variant-numeric:tabular-nums}
+.detail .stats b{color:var(--ink)}
+.detail .fx{color:var(--ink)}
+.detail .fx em{font-style:normal;color:var(--hot);font-weight:700}
+.detail .hint{color:var(--mute)}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.btn{flex:1;min-width:90px;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:#26305e;font-weight:700;font-size:13px;cursor:pointer}
+.btn.primary{background:var(--crystal);color:#08122a;border-color:var(--crystal)}
+.btn.warn{background:var(--hot);color:#2a1100;border-color:var(--hot)}
+.btn:disabled{opacity:.35;cursor:default}
+
+.hand{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 4px;min-height:104px}
+.card{flex:0 0 74px;height:100px;border-radius:9px;border:2px solid var(--line);background:var(--panel);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:4px}
+.card .cost{position:absolute;top:3px;left:4px;font-family:var(--display);font-size:14px;color:var(--crystal)}
+.card .sig{font-size:26px}
+.card .nm{font-size:10px;line-height:1.2;text-align:center}
+.card .ty{font-size:9px;color:var(--mute)}
+.card.dim{opacity:.5}
+.card.sel{border-color:var(--ink);transform:translateY(-4px)}
+.card.spell{border-style:double;border-width:3px}
+
+.actions{display:flex;gap:8px}
+.actions .btn{padding:12px}
+
+.modal{position:fixed;inset:0;background:rgba(5,7,18,.78);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal-box{width:100%;max-width:420px;max-height:85%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.6}
+.modal-box h3{margin:0;font-family:var(--display);font-weight:400;font-size:18px;color:var(--crystal);text-wrap:balance}
+.modal-box ul{margin:0;padding-left:1.2em}
+.modal-box li{margin:2px 0}
+.choice{display:flex;justify-content:space-between;gap:8px;text-align:left}
+.res-win{color:var(--crystal)} .res-lose{color:var(--danger)}
+
+@media (prefers-reduced-motion: reduce){
+  .unit.tgt,.unit.hit{animation:none}
+  .card.sel{transform:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<script>
+"use strict";
+/* ===== カード定義 ===== */
+const CARDS = {
+  risu:  {type:'unit',attr:'r',sig:'火',name:'火花リス',     cost:1,lv2:2,cap:2,pow:[2,3],od:2,odFx:'burn'},
+  totsu: {type:'unit',attr:'r',sig:'突',name:'紅蓮の突撃兵', cost:3,lv2:3,cap:3,pow:[4,6],od:3,odFx:'pierce'},
+  volga: {type:'unit',attr:'r',sig:'竜',name:'熔岩竜ヴォルガ',cost:5,lv2:3,cap:4,pow:[6,9],od:3,odFx:'burnAll'},
+  pen:   {type:'unit',attr:'b',sig:'氷',name:'氷晶ペンギン', cost:1,lv2:2,cap:3,pow:[1,3],od:2,odFx:'cool'},
+  kan:   {type:'unit',attr:'b',sig:'観',name:'蒼き観測者',   cost:2,lv2:3,cap:3,pow:[2,4],od:2,odFx:'cool',onSummon:'draw'},
+  shimo: {type:'unit',attr:'b',sig:'鎧',name:'霜鎧の守護者', cost:3,lv2:3,cap:4,pow:[3,6],od:2,odFx:'stand'},
+  koke:  {type:'unit',attr:'g',sig:'巨',name:'苔むす巨像',   cost:4,lv2:4,cap:5,pow:[5,8],od:2,odFx:'stand'},
+  saku:  {type:'unit',attr:'g',sig:'掘',name:'森の採掘者',   cost:2,lv2:2,cap:3,pow:[2,4],od:2,odFx:'pierce',onSummon:'gain'},
+  reikyaku:{type:'spell',attr:'b',sig:'冷',name:'緊急冷却',cost:1,fx:'coolAll'},
+  kudaki:  {type:'spell',attr:'r',sig:'砕',name:'結晶砕き',cost:3,fx:'shatter',target:true},
+  kiri:    {type:'spell',attr:'b',sig:'霧',name:'凍結の霧',cost:2,fx:'freeze',target:true},
+  hokyu:   {type:'spell',attr:'g',sig:'補',name:'補給線',  cost:2,fx:'draw2'},
+};
+const FX_TEXT = {
+  burn:'相手ユニット1体（結晶が一番多いもの）の結晶1個を中央プールへ',
+  burnAll:'相手ユニットすべての結晶を1個ずつ中央プールへ',
+  pierce:'ブロックされなければ2ダメージ',
+  cool:'自分の「熱い」結晶1個を手元へ戻す',
+  stand:'バトルの後、このユニットを回復する',
+  draw:'召喚時：カードを1枚引く',
+  gain:'召喚時：中央プールから結晶1個を手元へ',
+  coolAll:'自分の「熱い」結晶をすべて「冷めた」へ進める',
+  shatter:'相手ユニット1体の結晶2個を中央プールへ',
+  freeze:'相手ユニット1体を疲労させる',
+  draw2:'カードを2枚引く',
+};
+const DECK_LIST = ['risu','risu','totsu','totsu','volga','volga','pen','pen','kan','kan',
+  'shimo','shimo','koke','koke','saku','saku','reikyaku','kudaki','kiri','hokyu'];
+const START_LIFE = 5, START_STOCK = 3, START_HAND = 4, MAX_UNITS = 4;
+const OD_MAX_OVER = 2;   // 上限を何個まで超えられるか
+const OD_RECOIL = 2;     // 過負荷の反動：超えた分＋この数
+
+/* ===== 状態 ===== */
+let S, uidN = 1, GID = 0;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const alive = g => S.gid===g && !S.over;
+const other = s => s === 'p' ? 'c' : 'p';
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function newSide(name){ return {name, life:START_LIFE, stock:START_STOCK, hot:0, cool:0, deck:shuffle(DECK_LIST.slice()), hand:[], units:[]}; }
+
+function newGame(){
+  GID++;
+  S = {gid:GID, gameTurn:1, active:'p', phase:'main', pool:0, p:newSide('あなた'), c:newSide('CPU'),
+       sel:null, targeting:null, log:[], busy:false, over:null, hint:'', flash:null, blockResolve:null, modal:null};
+  for(let i=0;i<START_HAND;i++){ drawCard('p'); drawCard('c'); }
+  log('対戦開始！あなたの先攻です');
+  startTurn('p');
+  render();
+}
+function log(t){ S.log.push(t); if(S.log.length>60) S.log.shift(); }
+
+/* ===== 基本処理 ===== */
+const card = id => CARDS[id];
+const isOD = u => u.cr > card(u.id).cap;
+function power(u){ const d=card(u.id); let p = u.cr>=d.lv2 ? d.pow[1] : d.pow[0]; if(isOD(u)) p += d.od; return p; }
+function lvLabel(u){ const d=card(u.id); return isOD(u) ? 'オーバードライブ' : (u.cr>=d.lv2 ? 'Lv2' : 'Lv1'); }
+
+function drawCard(s){
+  const P=S[s];
+  if(!P.deck.length){ log(`${P.name}の山札が尽きた`); endGame(other(s)); return false; }
+  P.hand.push(P.deck.pop()); return true;
+}
+function startTurn(s){
+  const P=S[s], O=S[other(s)];
+  S.active=s; S.phase='main'; S.sel=null; S.targeting=null; S.hint='';
+  P.units.forEach(u=>{ u.tired=false; u.attacked=false; });
+  P.stock += P.cool; P.cool = P.hot; P.hot = 0;   // 冷めた→手元、熱い→冷めた
+  P.stock += 1;
+  if(P.life < O.life && S.pool > 0){ S.pool--; P.stock++; log(`${P.name}：ライフが少ないので中央プールから結晶1個を獲得`); }
+  if(S.gameTurn > 1) drawCard(s);
+}
+function canPlay(s,i){
+  const P=S[s], d=card(P.hand[i]);
+  if(d.type==='unit') return P.stock >= d.cost+1 && P.units.length < MAX_UNITS;
+  return P.stock >= d.cost;
+}
+function playCard(s,i,targetUid){
+  const P=S[s], id=P.hand[i], d=card(id);
+  P.hand.splice(i,1);
+  P.stock -= d.cost; P.hot += d.cost;
+  if(d.type==='unit'){
+    P.stock -= 1;
+    const u={uid:uidN++, id, cr:1, tired:false, attacked:false};
+    P.units.push(u);
+    log(`${P.name}：${d.name}を召喚`);
+    if(d.onSummon==='draw'){ if(drawCard(s)) log(`${d.name}の効果：1枚引いた`); }
+    if(d.onSummon==='gain' && S.pool>0){ S.pool--; P.stock++; log(`${d.name}の効果：中央プールから結晶1個を獲得`); }
+  } else {
+    log(`${P.name}：${d.name}を使った`);
+    const os=other(s), O=S[os];
+    if(d.fx==='coolAll'){ P.cool += P.hot; P.hot = 0; }
+    if(d.fx==='draw2'){ drawCard(s) && drawCard(s); }
+    if(d.fx==='shatter'){ const u=O.units.find(x=>x.uid===targetUid); if(u) removeToPool(os,u,2); }
+    if(d.fx==='freeze'){ const u=O.units.find(x=>x.uid===targetUid); if(u){ u.tired=true; log(`${card(u.id).name}は疲労した`); } }
+  }
+}
+function removeToPool(s,u,n){
+  const k=Math.min(n,u.cr); u.cr-=k; S.pool+=k;
+  log(`${card(u.id).name}の結晶${k}個が中央プールへ`);
+  if(u.cr<=0) destroy(s,u);
+}
+function destroy(s,u){
+  const P=S[s];
+  P.units = P.units.filter(x=>x!==u);
+  P.cool += u.cr;
+  log(`${card(u.id).name}は退場した`);
+  if(S.sel && S.sel.kind==='unit' && S.sel.uid===u.uid) S.sel=null;
+}
+function maxCrUnit(units){ return units.slice().sort((a,b)=>b.cr-a.cr)[0] || null; }
+
+async function attack(s,u){
+  const P=S[s], os=other(s), O=S[os], d=card(u.id), od=isOD(u), g=S.gid;
+  u.tired=true; u.attacked=true;
+  log(`${P.name}：${d.name}（パワー${power(u)}）で攻撃${od?'【オーバードライブ】':''}`);
+  S.flash=u.uid; render(); await sleep(450); if(S.gid!==g) return; S.flash=null;
+  if(od){
+    if(d.odFx==='burn'){ const t=maxCrUnit(O.units); if(t) removeToPool(os,t,1); }
+    if(d.odFx==='burnAll'){ O.units.slice().forEach(t=>removeToPool(os,t,1)); }
+    if(d.odFx==='cool' && P.hot>0){ P.hot--; P.stock++; log(`${d.name}の効果：熱い結晶1個を手元へ`); }
+  }
+  render();
+  const blocker = s==='p' ? cpuChooseBlock(u) : await askBlock(u);
+  if(!alive(g)) return;
+  if(blocker && O.units.includes(blocker)){
+    blocker.tired=true;
+    const ap=power(u), bp=power(blocker);
+    log(`${O.name}：${card(blocker.id).name}（パワー${bp}）でブロック`);
+    if(ap>=bp) destroy(os,blocker);
+    if(bp>=ap) destroy(s,u);
+  } else {
+    const dmg = (od && d.odFx==='pierce') ? 2 : 1;
+    const k=Math.min(dmg,O.life); O.life-=k; S.pool+=k;
+    log(`${O.name}のライフ −${k}（残り${O.life}）。削れた結晶は中央プールへ`);
+    if(O.life<=0) endGame(s);
+  }
+  if(od && d.odFx==='stand' && P.units.includes(u)){ u.tired=false; log(`${d.name}は回復した`); }
+  render();
+}
+
+async function endTurn(){
+  if(S.over) return;
+  const s=S.active, P=S[s];
+  P.units.slice().forEach(u=>{
+    const d=card(u.id), ex=u.cr-d.cap;
+    if(ex>0){
+      const k=Math.min(u.cr, ex+OD_RECOIL);
+      u.cr-=k; P.hot+=k;
+      log(`${d.name}の過負荷：結晶${k}個が熱い状態へ`);
+      if(u.cr<=0) destroy(s,u);
+    }
+  });
+  S.gameTurn++;
+  const n=other(s);
+  log(`―― ${S[n].name}のターン ――`);
+  startTurn(n);
+  if(n==='p') S.busy=false;
+  render();
+  if(S.over) return;
+  if(n==='c') await cpuTurn();
+}
+function endGame(winner){
+  if(S.over) return;
+  S.over=winner; S.busy=false; S.modal='over';
+  if(S.blockResolve){ const r=S.blockResolve; S.blockResolve=null; r(null); }
+}
+
+/* ===== CPU ===== */
+function cpuChooseBlock(att){
+  const C=S.c, ap=power(att), d=card(att.id);
+  const dmg=(isOD(att)&&d.odFx==='pierce')?2:1;
+  const cands=C.units.filter(u=>!u.tired).sort((a,b)=>power(a)-power(b));
+  if(!cands.length) return null;
+  const win=cands.find(u=>power(u)>ap); if(win) return win;
+  const tie=cands.find(u=>power(u)===ap && card(u.id).cost<=d.cost); if(tie) return tie;
+  if(C.life<=dmg || C.life<=2) return cands[0];
+  return null;
+}
+function cpuSpellTarget(id){
+  const C=S.c, P=S.p, d=card(id);
+  if(C.stock<d.cost) return false;
+  if(d.fx==='coolAll') return C.hot>=3 ? {} : false;
+  if(d.fx==='draw2') return C.hand.length<=3 ? {} : false;
+  if(d.fx==='shatter'){ const t=maxCrUnit(P.units); return (t && t.cr>=2) ? {uid:t.uid} : false; }
+  if(d.fx==='freeze'){ const t=P.units.filter(u=>!u.tired).sort((a,b)=>power(b)-power(a))[0]; return (t && power(t)>=3) ? {uid:t.uid} : false; }
+  return false;
+}
+async function cpuTurn(){
+  S.busy=true; render(); await sleep(700);
+  const g=S.gid; if(!alive(g)) return;
+  const C=S.c, P=S.p;
+  // 召喚（重いものから）
+  for(;;){
+    if(!alive(g)) return;
+    const idx=C.hand.map((id,i)=>i).filter(i=>card(C.hand[i]).type==='unit' && canPlay('c',i))
+      .sort((a,b)=>card(C.hand[b]).cost-card(C.hand[a]).cost);
+    if(!idx.length) break;
+    playCard('c',idx[0]); render(); await sleep(650);
+  }
+  // マジック
+  for(let i=C.hand.length-1;i>=0;i--){
+    if(!alive(g)) return;
+    const id=C.hand[i]; if(card(id).type!=='spell') continue;
+    const t=cpuSpellTarget(id);
+    if(t){ playCard('c',i,t.uid); render(); await sleep(650); }
+  }
+  if(!alive(g)) return;
+  // Lv2まで結晶を乗せる
+  C.units.slice().sort((a,b)=>(card(a.id).lv2-a.cr)-(card(b.id).lv2-b.cr)).forEach(u=>{
+    const need=card(u.id).lv2-u.cr;
+    if(need>0 && C.stock>=need){ C.stock-=need; u.cr+=need; }
+  });
+  // オーバードライブ判断
+  const odCands=C.units.filter(u=>!u.tired && !isOD(u)).filter(u=>{
+    const d=card(u.id); return P.life<=2 || d.cap>=3; });
+  if(odCands.length && (P.life<=2 || Math.random()<0.35)){
+    const u=odCands.sort((a,b)=>card(b.id).od-card(a.id).od)[0], d=card(u.id);
+    const need=d.cap+1-u.cr;
+    if(need>0 && C.stock>=need){ C.stock-=need; u.cr+=need; log(`CPU：${d.name}をオーバードライブ`); }
+  }
+  render(); await sleep(600); if(!alive(g)) return;
+  // 攻撃
+  S.phase='attack'; render(); await sleep(400);
+  while(alive(g)){
+    const ready=C.units.filter(u=>!u.tired && !u.attacked).sort((a,b)=>power(b)-power(a));
+    if(!ready.length) break;
+    const blockers=P.units.filter(u=>!u.tired);
+    const maxB=blockers.length ? Math.max(...blockers.map(power)) : -1;
+    let pick=ready.find(u=>isOD(u) || power(u)>maxB);
+    if(!pick && P.life<=ready.length) pick=ready[0];
+    if(pick && !isOD(pick) && C.life<=2 && P.units.length>0 && ready.length===1 && P.life>1) pick=null;
+    if(!pick) break;
+    await attack('c',pick);
+    await sleep(450);
+  }
+  if(!alive(g)){ if(S.gid===g) render(); return; }
+  await endTurn();
+}
+
+/* ===== プレイヤーのブロック選択 ===== */
+function askBlock(att){
+  const cands=S.p.units.filter(u=>!u.tired);
+  if(!cands.length) return Promise.resolve(null);
+  return new Promise(res=>{ S.blockResolve=res; S.modal={kind:'block', att}; render(); });
+}
+
+/* ===== 描画 ===== */
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function gems(n,max){ let h=''; for(let i=0;i<max;i++) h+=`<span class="gem${i<n?'':' empty'}"></span>`; return h; }
+function resBar(s){
+  const P=S[s];
+  return `<div class="res">
+    <span class="who">${P.name}</span>
+    <span class="lifebar" aria-label="ライフ${P.life}">${gems(P.life,START_LIFE)}</span>
+    <span class="chip stock">手元<b>${P.stock}</b></span>
+    <span class="chip hot">熱い<b>${P.hot}</b></span>
+    <span class="chip cool">冷めた<b>${P.cool}</b></span>
+    <span class="chip">山札<b>${P.deck.length}</b></span>
+    ${s==='c'?`<span class="chip">手札<b>${P.hand.length}</b></span>`:''}
+  </div>`;
+}
+function unitHTML(u,side){
+  const d=card(u.id); let dots='';
+  for(let i=0;i<d.cap+OD_MAX_OVER;i++) dots+=`<span class="dot${i<u.cr?' on':''}${i>=d.cap?' ov':''}"></span>`;
+  const sel = S.sel && S.sel.kind==='unit' && S.sel.uid===u.uid;
+  const tgt = S.targeting && side==='c';
+  return `<button class="unit ${d.attr}${u.tired?' tired':''}${isOD(u)?' od':''}${sel?' sel':''}${tgt?' tgt':''}${S.flash===u.uid?' hit':''}"
+    data-act="unit" data-side="${side}" data-uid="${u.uid}" aria-label="${esc(d.name)} パワー${power(u)}">
+    <span class="sig">${d.sig}</span><span class="pw">${power(u)}</span>
+    <span class="lv">${isOD(u)?'OD':lvLabel(u)}</span><span class="nm">${esc(d.name)}</span>
+    <span class="dots">${dots}</span>${u.tired?'<span class="tag">疲労</span>':''}</button>`;
+}
+function fieldHTML(s){
+  const us=S[s].units; let h=us.map(u=>unitHTML(u,s)).join('');
+  for(let i=us.length;i<MAX_UNITS;i++) h+='<div class="slot"></div>';
+  return `<div class="field">${h}</div>`;
+}
+const myMain = () => S.active==='p' && S.phase==='main' && !S.busy && !S.over;
+const myAttack = () => S.active==='p' && S.phase==='attack' && !S.busy && !S.over;
+
+function unitInfo(d){
+  return `<div class="stats"><span>Lv1 <b>${d.pow[0]}</b></span><span>Lv2（結晶${d.lv2}〜）<b>${d.pow[1]}</b></span><span>上限 <b>${d.cap}</b></span></div>
+    <div class="fx"><em>オーバードライブ</em>（結晶${d.cap+1}〜${d.cap+OD_MAX_OVER}）：パワー+${d.od}、攻撃時 ${FX_TEXT[d.odFx]}</div>
+    ${d.onSummon?`<div class="fx">${FX_TEXT[d.onSummon]}</div>`:''}`;
+}
+function detailHTML(){
+  if(S.targeting){
+    const d=card(S.p.hand[S.targeting.i]);
+    return `<h2>${esc(d.name)}<small>対象を選んでください</small></h2>
+      <div class="hint">相手のユニットをタップすると「${FX_TEXT[d.fx]}」が発動します。</div>
+      <div class="btns"><button class="btn" data-act="cancelT">やめる</button></div>`;
+  }
+  const sel=S.sel;
+  if(sel && sel.kind==='hand' && S.p.hand[sel.i]){
+    const d=card(S.p.hand[sel.i]), ok=myMain() && canPlay('p',sel.i);
+    if(d.type==='unit'){
+      const why = S.p.units.length>=MAX_UNITS ? '場がいっぱいです' : (S.p.stock<d.cost+1 ? `手元の結晶が${d.cost+1}個必要です` : '');
+      return `<h2>${esc(d.name)}<small>ユニット・コスト${d.cost}（召喚には結晶${d.cost+1}個）</small></h2>${unitInfo(d)}
+        <div class="btns"><button class="btn primary" data-act="play" ${ok?'':'disabled'}>召喚する</button></div>
+        ${!ok && myMain() && why?`<div class="hint">${why}</div>`:''}`;
+    }
+    return `<h2>${esc(d.name)}<small>マジック・コスト${d.cost}</small></h2><div class="fx">${FX_TEXT[d.fx]}</div>
+      <div class="btns"><button class="btn primary" data-act="play" ${ok?'':'disabled'}>使う</button></div>`;
+  }
+  if(sel && sel.kind==='unit'){
+    const P=S[sel.side], u=P.units.find(x=>x.uid===sel.uid);
+    if(u){
+      const d=card(u.id), mine=sel.side==='p';
+      let btns='';
+      if(mine && myMain()){
+        btns=`<div class="btns">
+          <button class="btn" data-act="minus" ${u.cr>1?'':'disabled'}>結晶を手元へ戻す</button>
+          <button class="btn ${u.cr>=d.cap?'warn':'primary'}" data-act="plus" ${(S.p.stock>0 && u.cr<d.cap+OD_MAX_OVER)?'':'disabled'}>${u.cr>=d.cap?'乗せて過負荷':'結晶を乗せる'}</button></div>`;
+      } else if(mine && myAttack()){
+        const can=!u.tired && !u.attacked;
+        btns=`<div class="btns"><button class="btn warn" data-act="atk" ${can?'':'disabled'}>${u.attacked?'このターンは攻撃済み':(u.tired?'疲労中':'このユニットで攻撃')}</button></div>`;
+      }
+      const odNote = isOD(u) ? `<div class="hint">ターン終了時、結晶${Math.min(u.cr,u.cr-d.cap+OD_RECOIL)}個が熱い状態になります${u.cr-d.cap+OD_RECOIL>=u.cr?'（退場します）':''}</div>` : '';
+      return `<h2>${esc(d.name)}<small>${mine?'あなた':'CPU'}・結晶${u.cr}個・${lvLabel(u)}・パワー${power(u)}</small></h2>${unitInfo(d)}${odNote}${btns}`;
+    }
+  }
+  if(S.over) return `<div class="hint">対戦が終わりました。</div>`;
+  if(S.active==='c') return `<h2>CPUのターン</h2><div class="hint">CPUが行動しています。攻撃されたらブロックするか選べます。</div>`;
+  if(S.phase==='main') return `<h2>メインフェイズ</h2><div class="hint">${S.hint || '手札をタップして召喚。自分のユニットをタップすると結晶を乗せ替えられます。上限を超えて乗せるとオーバードライブ。'}</div>`;
+  return `<h2>攻撃フェイズ</h2><div class="hint">${S.hint || '攻撃させたいユニットをタップしてください。攻撃したユニットは相手のターン中ブロックできません。'}</div>`;
+}
+function handHTML(){
+  return `<div class="hand">${S.p.hand.map((id,i)=>{
+    const d=card(id), ok=myMain() && canPlay('p',i), sel=S.sel && S.sel.kind==='hand' && S.sel.i===i;
+    return `<button class="card ${d.attr}${d.type==='spell'?' spell':''}${ok?'':' dim'}${sel?' sel':''}" data-act="hand" data-i="${i}" aria-label="${esc(d.name)} コスト${d.cost}">
+      <span class="cost">${d.cost}</span><span class="sig">${d.sig}</span><span class="nm">${esc(d.name)}</span><span class="ty">${d.type==='unit'?'ユニット':'マジック'}</span></button>`;
+  }).join('')}</div>`;
+}
+function modalHTML(){
+  const m=S.modal; if(!m) return '';
+  if(m==='rules') return `<div class="modal"><div class="modal-box">
+    <h3>遊び方</h3>
+    <ul>
+      <li><b>勝利条件</b>：相手のライフ結晶${START_LIFE}個をすべて削る（山札が引けなくなっても負け）。</li>
+      <li><b>結晶の置き場</b>：手元（すぐ使える）／熱い・冷めた（支払い済みで冷却中）／ユニットの上。</li>
+      <li><b>ターン開始</b>：ユニット回復 → 冷めた結晶が手元へ、熱い結晶が冷めたへ → 結晶+1 → ライフが相手より少なければ中央プールから1個 → 1枚引く。</li>
+      <li><b>召喚</b>：コスト分の結晶を払い（熱い状態へ）、さらに手元から1個をユニットに乗せる。</li>
+      <li><b>乗せ替え</b>：メイン中はユニットの結晶を自由に増減できる（最低1個）。数が多いとLv2。</li>
+      <li><b>オーバードライブ</b>：上限を超えて乗せるとパワーアップ＋攻撃時に特殊効果。ただしターン終了時に「超えた分＋${OD_RECOIL}個」が熱い状態になり、0個になれば退場。</li>
+      <li><b>攻撃</b>：回復しているユニットで攻撃すると疲労。相手は回復しているユニットでブロックでき、パワーの低い方が退場（同じなら両方）。退場したユニットの結晶は冷めたへ。</li>
+      <li><b>ダメージ</b>：ブロックされなければライフ−1。削れたライフ結晶は中央プールへ行き、劣勢の側が毎ターン1個ずつ拾えます。</li>
+      <li>先攻の1ターン目はドローと攻撃ができません。</li>
+    </ul>
+    <button class="btn primary" data-act="closeModal">閉じる</button></div></div>`;
+  if(m==='over'){
+    const win=S.over==='p';
+    return `<div class="modal"><div class="modal-box">
+      <h3 class="${win?'res-win':'res-lose'}">${win?'勝利！':'敗北…'}</h3>
+      <div>${Math.ceil(S.gameTurn/2)}ターン目で決着。ライフ あなた${S.p.life} / CPU${S.c.life}</div>
+      <div class="btns"><button class="btn primary" data-act="restart">もう一度遊ぶ</button><button class="btn" data-act="closeModal">盤面を見る</button></div></div></div>`;
+  }
+  if(m.kind==='block'){
+    const a=m.att, ad=card(a.id), ap=power(a), dmg=(isOD(a)&&ad.odFx==='pierce')?2:1;
+    const opts=S.p.units.filter(u=>!u.tired).map(u=>{
+      const bp=power(u), r=bp>ap?'勝ち':(bp===ap?'相打ち':'負け');
+      return `<button class="btn choice" data-act="block" data-uid="${u.uid}"><span>${esc(card(u.id).name)}（パワー${bp}）</span><span>${r}</span></button>`;
+    }).join('');
+    return `<div class="modal"><div class="modal-box">
+      <h3>${esc(ad.name)}が攻撃してきた</h3>
+      <div>パワー${ap}${isOD(a)?'（オーバードライブ中）':''}。ブロックするユニットを選んでください。</div>
+      ${opts}
+      <button class="btn warn" data-act="block" data-uid="">ブロックしない（ライフ−${dmg}）</button></div></div>`;
+  }
+  return '';
+}
+function render(){
+  const yourTurn=S.active==='p';
+  const phaseText = S.over ? '対戦終了' : `${Math.ceil(S.gameTurn/2)}ターン目・${yourTurn?'あなた':'CPU'}の${S.phase==='main'?'メイン':'攻撃'}`;
+  const logs=S.log.slice(-3).map(t=>`<div>${esc(t)}</div>`).join('');
+  document.getElementById('app').innerHTML = `
+    <header><h1>結晶オーバードライブ</h1>
+      <div style="display:flex;gap:6px"><button class="small-btn" data-act="rules">遊び方</button><button class="small-btn" data-act="restart">最初から</button></div></header>
+    ${resBar('c')}
+    ${fieldHTML('c')}
+    <div class="center">
+      <div class="center-top"><span class="phase ${yourTurn?'you':'cpu'}">${phaseText}</span>
+        <span class="pool">中央プール <span class="gem"></span><b>${S.pool}</b></span></div>
+      <div class="log" aria-live="polite">${logs}</div>
+    </div>
+    ${fieldHTML('p')}
+    ${resBar('p')}
+    <div class="detail">${detailHTML()}</div>
+    ${handHTML()}
+    <div class="actions">
+      <button class="btn" data-act="toAttack" ${myMain()?'':'disabled'}>攻撃フェイズへ</button>
+      <button class="btn primary" data-act="end" ${(yourTurn && !S.busy && !S.over)?'':'disabled'}>ターン終了</button>
+    </div>`;
+  document.getElementById('modal-root').innerHTML = modalHTML();
+}
+
+/* ===== 入力 ===== */
+document.addEventListener('click', async e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const act=b.dataset.act;
+  if(act==='block'){
+    const r=S.blockResolve; if(!r) return;
+    S.blockResolve=null; S.modal=null;
+    const uid=b.dataset.uid ? +b.dataset.uid : null;
+    r(uid ? S.p.units.find(u=>u.uid===uid) : null); return;
+  }
+  if(act==='rules'){ S.modal='rules'; render(); return; }
+  if(act==='closeModal'){ S.modal=null; render(); return; }
+  if(act==='restart'){ if(S.blockResolve){ const r=S.blockResolve; S.blockResolve=null; r(null); } S.modal=null; uidN=1; newGame(); return; }
+  if(S.over || S.busy) return;
+  S.hint='';
+  if(act==='hand'){ S.targeting=null; S.sel={kind:'hand', i:+b.dataset.i}; }
+  else if(act==='unit'){
+    const side=b.dataset.side, uid=+b.dataset.uid;
+    if(S.targeting && side==='c'){
+      const i=S.targeting.i; S.targeting=null; S.sel=null;
+      playCard('p',i,uid);
+    } else { S.sel={kind:'unit', side, uid}; }
+  }
+  else if(act==='cancelT'){ S.targeting=null; }
+  else if(act==='play' && myMain() && S.sel && S.sel.kind==='hand'){
+    const i=S.sel.i, d=card(S.p.hand[i]);
+    if(canPlay('p',i)){
+      if(d.target){
+        if(!S.c.units.length) S.hint='対象にできる相手のユニットがいません。';
+        else { S.targeting={i}; S.sel=null; }
+      } else { playCard('p',i); S.sel=null; }
+    }
+  }
+  else if((act==='plus'||act==='minus') && myMain() && S.sel && S.sel.kind==='unit'){
+    const u=S.p.units.find(x=>x.uid===S.sel.uid);
+    if(u){ const d=card(u.id);
+      if(act==='plus' && S.p.stock>0 && u.cr<d.cap+OD_MAX_OVER){ S.p.stock--; u.cr++; }
+      if(act==='minus' && u.cr>1){ S.p.stock++; u.cr--; } }
+  }
+  else if(act==='toAttack' && myMain()){
+    if(S.gameTurn===1) S.hint='先攻の1ターン目は攻撃できません。ターン終了してください。';
+    else { S.phase='attack'; S.sel=null; S.targeting=null; }
+  }
+  else if(act==='atk' && myAttack() && S.sel && S.sel.kind==='unit'){
+    const u=S.p.units.find(x=>x.uid===S.sel.uid);
+    if(u && !u.tired && !u.attacked){ const g=S.gid; S.busy=true; S.sel=null; await attack('p',u); if(S.gid!==g) return; if(!S.over) S.busy=false; }
+  }
+  else if(act==='end' && S.active==='p'){
+    S.busy=true; await endTurn(); return;
+  }
+  render();
+});
+
+newGame();
+</script>
+</body>
+</html>
