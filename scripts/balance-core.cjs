@@ -121,7 +121,8 @@ async function runReport({games = 100, seed = 20261031, policies = ['rush','rese
     let minTurns = Infinity, maxTurns = -Infinity;
     for (let i = 0; i < games; i++) {
       const result = await runMatch(seed + i, policy);
-      counts[result.winner]++;
+      const outcome = result.winner==='p' ? 'player' : (result.winner==='c' ? 'cpu' : 'timeout');
+      counts[outcome]++;
       turnsSum += result.turns;
       minTurns = Math.min(minTurns, result.turns);
       maxTurns = Math.max(maxTurns, result.turns);
