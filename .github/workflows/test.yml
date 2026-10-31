@@ -31,3 +31,5 @@ jobs:
         run: node --test tests/*.test.cjs
       - name: CPU対戦シミュレーション（固定シード・各100試合）
         run: node scripts/balance-report.cjs --games 100 --seed 20261031
+      - name: バランス候補7シナリオ比較（固定シード）
+        run: node scripts/balance-scenarios.cjs --games 100 --seed 20261031
