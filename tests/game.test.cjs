@@ -14,8 +14,9 @@ if (!script) throw new Error('web/index.html にゲームスクリプトがあ�
 function boot() {
   const timers = [];
   const elements = new Map();
+  const handlers = {};
   const document = {
-    addEventListener() {},
+    addEventListener(event, handler) { handlers[event] = handler; },
     getElementById(id) {
       if (!elements.has(id)) elements.set(id, { innerHTML: '' });
       return elements.get(id);
@@ -26,7 +27,17 @@ function boot() {
     setTimeout(callback) { timers.push(callback); },
   });
   vm.runInContext(script[1], context, { filename: 'web/index.html' });
-  return { timers, run: (code) => vm.runInContext(code, context) };
+  return {
+    timers,
+    run: (code) => vm.runInContext(code, context),
+    html: (id) => elements.get(id)?.innerHTML || '',
+    click(act, attrs = {}) {
+      return handlers.click({
+        target: { closest: (selector) =>
+          selector === '[data-act]' ? { dataset: { act, ...attrs } } : null },
+      });
+    },
+  };
 }
 
 test('対戦開始時のライフ・結晶・デッキ枚数', () => {
@@ -86,4 +97,54 @@ test('対戦再開始後に古いCPUの待機処理が新しい対戦を操作�
   assert.equal(run('S.c.units.length'), 0);
   assert.equal(run('S.busy'), false);
   assert.equal(run('S.active'), 'p');
+});
+
+
+test('対象のいないマジックは使用できず、手札や結晶を消費しない', () => {
+  const { run } = boot();
+  run("S.p.hand=['kudaki']; S.p.stock=10;");
+  assert.equal(run("canPlay('p',0)"), false);
+  assert.equal(run("canPlay('p',99)"), false, '存在しない手札番号は操作不可');
+  assert.equal(run("playCard('p',0,99)"), false);
+  assert.equal(run('S.p.stock'), 10);
+  assert.equal(run('S.p.hand.length'), 1);
+  assert.match(run("S.sel={kind:'hand',i:0}; detailHTML()"), /対象となる相手ユニットがいません/);
+});
+
+test('対象UIDの照合後のみ、結晶砕きの効果とコストが発生する', () => {
+  const { run } = boot();
+  run("S.p.hand=['kudaki']; S.p.stock=10; S.c.units=[{uid:99,id:'risu',cr:2,tired:false,attacked:false}];");
+  assert.equal(run("canPlay('p',0)"), true);
+  assert.equal(run("playCard('p',0,999)"), false);
+  assert.equal(run('S.p.stock'), 10);
+  assert.equal(run("playCard('p',0,99)"), true);
+  assert.equal(run('S.p.stock'), 7);
+  assert.equal(run('S.p.hot'), 3);
+  assert.equal(run('S.pool'), 2);
+  assert.equal(run('S.c.units.length'), 0);
+});
+
+test('カード一覧で全12種と効果を確認して閉じられる', async () => {
+  const { run, click, html } = boot();
+  await click('catalog');
+  assert.equal(run('S.modal'), 'catalog');
+  const modal = html('modal-root');
+  assert.equal((modal.match(/class="catalog-card /g) || []).length, 12);
+  assert.match(modal, /火花リス/);
+  assert.match(modal, /補給線/);
+  assert.match(modal, /オーバードライブ|OD：/);
+  await click('closeModal');
+  assert.equal(run('S.modal'), null);
+});
+
+test('カードを選択して対象ユニットを指定するとマジックが適用される', async () => {
+  const { run, click } = boot();
+  run("S.p.hand=['kiri']; S.p.stock=10; S.c.units=[{uid:99,id:'risu',cr:2,tired:false,attacked:false}]; S.sel={kind:'hand',i:0};");
+  await click('play');
+  assert.equal(run('S.targeting.i'), 0);
+  await click('unit', { side: 'c', uid: '99' });
+  assert.equal(run('S.targeting'), null);
+  assert.equal(run('S.c.units[0].tired'), true);
+  assert.equal(run('S.p.stock'), 8);
+  assert.equal(run('S.p.hot'), 2);
 });
