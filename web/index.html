@@ -317,8 +317,10 @@ function cpuSpellTarget(id){
   return false;
 }
 async function cpuTurn(){
+  // 再戦でSが置き換わっても、古いCPU処理が新しい対戦に干渉しないよう先に世代を保持する。
+  const g=S.gid;
   S.busy=true; render(); await sleep(700);
-  const g=S.gid; if(!alive(g)) return;
+  if(!alive(g)) return;
   const C=S.c, P=S.p;
   // 召喚（重いものから）
   for(;;){
