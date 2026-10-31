@@ -1,0 +1,29 @@
+name: Webゲーム自動テスト
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'web/**'
+      - 'tests/**'
+      - '.github/workflows/test.yml'
+  push:
+    branches: [develop]
+    paths:
+      - 'web/**'
+      - 'tests/**'
+      - '.github/workflows/test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: ゲームロジックの回帰テスト
+        run: node --test tests/*.test.cjs
