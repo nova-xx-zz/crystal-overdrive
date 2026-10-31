@@ -198,7 +198,9 @@ test('マジック対象指定時に対象ボタンの音声ラベルへ案内�
 test('iPhone用CSSに下部固定操作・セーフエリア・タップ領域を設定する', () => {
   const styles = fs.readFileSync(path.join(WEB_DIR, 'styles.css'), 'utf8');
   assert.match(styles, /\.actions\{position:sticky;bottom:0;/);
+  assert.match(styles, /safe-area-inset-top/);
   assert.match(styles, /safe-area-inset-bottom/);
+  assert.match(html, /viewport-fit=cover/);
   assert.match(styles, /\.choice\{[^}]*min-height:52px/);
   assert.match(styles, /\.btn\{[^}]*min-height:44px/);
 });
