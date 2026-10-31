@@ -180,3 +180,25 @@ test('分離後も起動時に対戦画面が初期描画される', () => {
   assert.match(getHTML('app'), /攻撃フェイズへ/);
   assert.match(getHTML('app'), /中央プール/);
 });
+
+test('カード選択・ユニット選択にaria-pressedが付く', () => {
+  const { run, html: getHTML } = boot();
+  run("S.p.hand=['risu']; S.sel={kind:'hand',i:0}; render();");
+  assert.match(getHTML('app'), /data-act="hand" data-i="0" aria-pressed="true"/);
+  run("S.p.units=[{uid:99,id:'risu',cr:2,tired:false,attacked:false}]; S.sel={kind:'unit',side:'p',uid:99}; render();");
+  assert.match(getHTML('app'), /data-act="unit" data-side="p" data-uid="99" aria-pressed="true"/);
+});
+
+test('マジック対象指定時に対象ボタンの音声ラベルへ案内を追加する', () => {
+  const { run, html: getHTML } = boot();
+  run("S.p.hand=['kiri']; S.c.units=[{uid:99,id:'risu',cr:2,tired:false,attacked:false}]; S.targeting={i:0}; render();");
+  assert.match(getHTML('app'), /aria-label="火花リス パワー3 対象に指定"/);
+});
+
+test('iPhone用CSSに下部固定操作・セーフエリア・タップ領域を設定する', () => {
+  const styles = fs.readFileSync(path.join(WEB_DIR, 'styles.css'), 'utf8');
+  assert.match(styles, /\.actions\{position:sticky;bottom:0;/);
+  assert.match(styles, /safe-area-inset-bottom/);
+  assert.match(styles, /\.choice\{[^}]*min-height:52px/);
+  assert.match(styles, /\.btn\{[^}]*min-height:44px/);
+});
