@@ -21,7 +21,7 @@ function unitHTML(u,side){
   const sel = S.sel && S.sel.kind==='unit' && S.sel.uid===u.uid;
   const tgt = S.targeting && side==='c';
   return `<button class="unit ${d.attr}${u.tired?' tired':''}${isOD(u)?' od':''}${sel?' sel':''}${tgt?' tgt':''}${S.flash===u.uid?' hit':''}"
-    data-act="unit" data-side="${side}" data-uid="${u.uid}" aria-label="${esc(d.name)} パワー${power(u)}">
+    data-act="unit" data-side="${side}" data-uid="${u.uid}" aria-pressed="${!!sel}" aria-label="${esc(d.name)} パワー${power(u)}${tgt?' 対象に指定':''}">
     <span class="sig">${d.sig}</span><span class="pw">${power(u)}</span>
     <span class="lv">${isOD(u)?'OD':lvLabel(u)}</span><span class="nm">${esc(d.name)}</span>
     <span class="dots">${dots}</span>${u.tired?'<span class="tag">疲労</span>':''}</button>`;
@@ -85,7 +85,7 @@ function detailHTML(){
 function handHTML(){
   return `<div class="hand">${S.p.hand.map((id,i)=>{
     const d=card(id), ok=myMain() && canPlay('p',i), sel=S.sel && S.sel.kind==='hand' && S.sel.i===i;
-    return `<button class="card ${d.attr}${d.type==='spell'?' spell':''}${ok?'':' dim'}${sel?' sel':''}" data-act="hand" data-i="${i}" aria-label="${esc(d.name)} コスト${d.cost}">
+    return `<button class="card ${d.attr}${d.type==='spell'?' spell':''}${ok?'':' dim'}${sel?' sel':''}" data-act="hand" data-i="${i}" aria-pressed="${!!sel}" aria-label="${esc(d.name)} コスト${d.cost}">
       <span class="cost">${d.cost}</span><span class="sig">${d.sig}</span><span class="nm">${esc(d.name)}</span><span class="ty">${d.type==='unit'?'ユニット':'マジック'}</span></button>`;
   }).join('')}</div>`;
 }
