@@ -115,3 +115,12 @@ test('マジック使用とユニット退場で墓地カウンタを更新す�
   assert.equal(run('S.p.grave'), 2);
   assert.equal(run('S.p.units.length'), 0);
 });
+
+test('iPhoneの縦・左右横向きをInfo.plistへ冪等に指定できる', () => {
+  const { withOrientations, ORIENTATIONS } = require('../scripts/ensure-ios-orientations.cjs');
+  const source = '<?xml version="1.0"?><plist version="1.0"><dict><key>CFBundleName</key><string>App</string></dict></plist>';
+  const patched = withOrientations(source);
+  for (const orientation of ORIENTATIONS) assert.match(patched, new RegExp(orientation));
+  assert.equal(withOrientations(patched), patched);
+  assert.equal((patched.match(/<key>UISupportedInterfaceOrientations<\/key>/g) || []).length, 1);
+});
