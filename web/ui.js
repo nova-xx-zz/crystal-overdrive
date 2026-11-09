@@ -1,3 +1,5 @@
+"use strict";
+
 
 /* ===== ラフ画準拠のカードアート（外部アセット不要） ===== */
 function silhouette(id){
@@ -50,7 +52,7 @@ function progressHTML(){
     '<div class="resource-status"><span>中央プール <b>◆ '+S.pool+'</b></span><span class="resource-log">'+esc(S.log.at(-1)||'')+'</span></div>';
 }
 
-"use strict";
+
 
 /* ===== 描画 ===== */
 const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
