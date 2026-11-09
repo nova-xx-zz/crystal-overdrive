@@ -6,7 +6,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const alive = g => S.gid===g && !S.over;
 const other = s => s === 'p' ? 'c' : 'p';
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function newSide(name){ return {name, life:START_LIFE, stock:START_STOCK, hot:0, cool:0, deck:shuffle(DECK_LIST.slice()), hand:[], units:[]}; }
+function newSide(name){ return {name, life:START_LIFE, stock:START_STOCK, hot:0, cool:0, grave:0, deck:shuffle(DECK_LIST.slice()), hand:[], units:[]}; }
 
 function newGame(){
   GID++;
@@ -59,6 +59,7 @@ function playCard(s,i,targetUid){
     if(d.onSummon==='draw'){ if(drawCard(s)) log(`${d.name}の効果：1枚引いた`); }
     if(d.onSummon==='gain' && S.pool>0){ S.pool--; P.stock++; log(`${d.name}の効果：中央プールから結晶1個を獲得`); }
   } else {
+    P.grave++; // 使用済みマジックは墓地へ（UI表示のみ）
     log(`${P.name}：${d.name}を使った`);
     const os=other(s), O=S[os];
     if(d.fx==='coolAll'){ P.cool += P.hot; P.hot = 0; }
@@ -76,6 +77,7 @@ function removeToPool(s,u,n){
 function destroy(s,u){
   const P=S[s];
   P.units = P.units.filter(x=>x!==u);
+  P.grave++; // 退場ユニットは墓地へ（勝敗処理や結晶循環は不変）
   P.cool += u.cr;
   log(`${card(u.id).name}は退場した`);
   if(S.sel && S.sel.kind==='unit' && S.sel.uid===u.uid) S.sel=null;

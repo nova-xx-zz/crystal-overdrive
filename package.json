@@ -8,7 +8,8 @@
     "ios:add": "cap add ios",
     "ios:sync": "cap sync ios",
     "ios:open": "cap open ios",
-    "ios:run": "cap run ios"
+    "ios:run": "cap run ios",
+    "ios:prepare": "cap sync ios && node scripts/ensure-ios-orientations.cjs"
   },
   "dependencies": {
     "@capacitor/core": "8.6.0",
