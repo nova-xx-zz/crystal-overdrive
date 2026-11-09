@@ -12,6 +12,8 @@
 
 Web版の対戦画面では「カード」ボタンから全12種の効果を確認できます。
 
+**iOS正式バトル画面**: 縦持ち／横持ちラフに合わせた新しい対戦UIを `web/index.html` に実装しています。設計・ルールとの差異・実機検証項目は [docs/iOS縦横バトルUI.md](docs/iOS縦横バトルUI.md) を参照してください。
+
 ## フォルダ構成
 | パス | 内容 |
 |---|---|
@@ -39,7 +41,7 @@ Web版をWKWebViewへ同梱する設定を追加しています。Mac（Xcode 26
 npm install
 npm test
 npm run ios:add     # 初回のみ
-npm run ios:sync
+npm run ios:prepare # iOS同梱＋縦横の回転許可
 npm run ios:open
 ```
 
