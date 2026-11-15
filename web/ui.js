@@ -84,7 +84,7 @@ function unitHTML(u,side){
 function fieldHTML(s){
   const us=S[s].units; let h=us.map(u=>unitHTML(u,s)).join('');
   for(let i=us.length;i<MAX_UNITS;i++)h+='<div class="slot" aria-hidden="true"><span>＋</span></div>';
-  return '<div class="field">'+h+'<div class="slot landscape-extra" aria-hidden="true"><span>＋</span></div></div>';
+  return '<div class="field">'+h+'</div>';
 }
 
 const myMain = () => S.active==='p' && S.phase==='main' && !S.busy && !S.over;
