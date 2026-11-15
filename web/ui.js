@@ -219,9 +219,6 @@ function opponentHandHTML(){
   return '<div class="opponent-hand" aria-label="相手の手札'+count+'枚">'+backs+
     '<span class="opponent-hand-count">'+count+'枚</span></div>';
 }
-function decorativeSlots(){
-  return '<span></span><span></span><span></span><span></span>';
-}
 function render(){
   const you=S.active==='p';
   const detailOpen=!!(S.sel || S.targeting);
@@ -239,12 +236,10 @@ function render(){
       '<button class="settings-menu" data-act="menu" aria-label="設定メニュー"><span class="hamburger">⚙</span><small>設定</small></button>'+
       '<section class="battlefield-panel arena-table" aria-label="俯瞰バトルフィールド">'+
         '<div class="arena-rim" aria-hidden="true"></div>'+
-        '<div class="arena-echo-row arena-echo-enemy" aria-hidden="true">'+decorativeSlots()+'</div>'+
         '<div class="opponent-lane lane">'+boardHTML('c')+'</div>'+
         '<div class="middle-panel"><div class="progress-panel">'+progressHTML()+'</div></div>'+
         '<div class="arena-compass" aria-hidden="true">✦</div>'+
         '<div class="player-lane lane">'+boardHTML('p')+'</div>'+
-        '<div class="arena-echo-row arena-echo-player" aria-hidden="true">'+decorativeSlots()+'</div>'+
         '<div class="arena-piles arena-piles-enemy">'+deckBadge('c')+graveBadge('c')+'</div>'+
         '<div class="arena-piles arena-piles-player">'+deckBadge('p')+graveBadge('p')+'</div>'+
       '</section>'+
