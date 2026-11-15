@@ -2,7 +2,7 @@
  * CRYSTAL OVERDRIVE — responsive overhead battle table
  *
  * Visual CSS only. Uses the actual life/crystal/hand/deck state from ui.js.
- * Layout v3 (2026-11-15): three exclusive areas, not nested absolute % overlays.
+ * Layout v4: controls and information share a normal-flow center rail.
  * Background and art remain offline (CSS + bundled SVG silhouettes).
  */
 :root{
@@ -12,13 +12,13 @@
   --arena-ink:#eaf1ff;
 }
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d1828}
-#app{height:100dvh;max-width:none;width:100%;margin:0;padding:0;overflow:hidden;background:#101d30}
+#app{height:100vh;height:100dvh;max-width:none;width:100%;margin:0;padding:0;overflow:hidden;background:#101d30}
 .arena-mode,.arena-mode *{box-sizing:border-box}
 .arena-mode{
   position:relative;isolation:isolate;
   display:grid;
   grid-template-columns:minmax(0,1fr);
-  grid-template-rows:72px minmax(0,1fr) minmax(245px,33%);
+  grid-template-rows:64px minmax(0,1fr) minmax(190px,27%);
   gap:0;
   width:100%;height:100%;max-width:780px;margin:0 auto;
   padding:max(5px,env(safe-area-inset-top,0px)) max(6px,env(safe-area-inset-right,0px))
@@ -115,7 +115,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   position:absolute;z-index:15;top:max(7px,env(safe-area-inset-top,0px));
   right:max(6px,env(safe-area-inset-right,0px));
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
-  width:40px;height:42px;padding:2px;margin:0;
+  width:44px;height:44px;min-width:44px;min-height:44px;padding:2px;margin:0;
   border:2px solid #c7b48c;border-radius:50%;
   background:linear-gradient(#495570,#252e43);color:#fff;
   box-shadow:0 3px 8px #050c1bb3;
@@ -128,7 +128,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   position:relative;z-index:2;
   top:auto;bottom:auto;left:auto;right:auto;
   display:grid;
-  grid-template-rows:minmax(0,1fr) 64px minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) 106px minmax(0,1fr);
   align-items:stretch;justify-items:stretch;
   width:calc(100% - 6px);height:calc(100% - 9px);
   min-width:0;min-height:0;margin:0 auto 4px;padding:4px 0;
@@ -161,7 +161,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   position:relative;z-index:2;
   top:auto;bottom:auto;left:auto;right:auto;
   align-self:center;justify-self:center;display:flex;
-  width:min(73%,390px);height:min(83%,135px);
+  width:min(73%,390px);height:min(85%,150px);
   min-width:0;min-height:0;padding:0;margin:0;
   border:0;background:transparent;border-radius:0;
   overflow:visible;
@@ -206,7 +206,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   background:#233551;color:#fff;font-size:12px;font-weight:900;transform:rotate(45deg);
 }
 .arena-mode .unit-name{
-  position:relative;z-index:3;width:100%;max-width:100%;
+  position:relative;z-index:3;display:block;width:100%;max-width:100%;
   padding:1px;font-size:8px;line-height:1.13;font-weight:900;
   background:#0f1a2dd6;color:#fff;text-align:center;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -229,47 +229,37 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
 .arena-mode .unit.tgt{border-color:#fff3ad;box-shadow:0 0 14px #f6c86f;animation:pulse 1s infinite}
 .arena-mode .unit.od{border-color:#f5ab4d;box-shadow:0 0 12px #f5a85c}
 .arena-mode .unit.hit{animation:hit .45s}
-/* Center phase strip never touches either active unit row. */
+/* The entire control rail owns its grid row, including all touch targets. */
 .arena-mode .middle-panel{
   grid-column:1;grid-row:2;
   position:relative;z-index:5;top:auto;bottom:auto;left:auto;right:auto;
   justify-self:center;align-self:center;display:block;
-  width:min(95%,390px);height:auto;min-height:0;min-width:0;
+  width:calc(100% - 16px);max-width:460px;height:auto;min-height:0;min-width:0;
   padding:0;margin:0;border:0;border-radius:0;box-shadow:none;
   background:transparent;overflow:visible;pointer-events:none;
 }
 .arena-mode .progress-panel{
-  display:flex;align-items:center;justify-content:center;gap:5px;
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 46px auto;
+  align-items:center;justify-content:stretch;gap:4px;
   width:100%;height:auto;min-width:0;min-height:0;padding:0;border:0;
   background:transparent;pointer-events:none;
 }
-.arena-mode .turn-pill{display:none}
-.arena-mode .phase-rail{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  flex:1;min-width:0;max-width:none;padding:3px 4px;border:1px solid #698ba6;
-  border-radius:8px;background:#172c46e8;box-shadow:0 2px 8px #040c19a6;
-}
-.arena-mode .phase-rail>strong{padding:0;font-size:10px;line-height:1.15;color:#fff;background:none}
-.arena-mode .phase-steps{display:flex;align-items:start;gap:3px;color:#a0a9b9}
-.arena-mode .phase-steps>span{font-size:11px}
-.arena-mode .phase-steps>span.on{color:#65c8ff}
-.arena-mode .phase-steps small{display:block;font-size:7px;color:#c4d2e1}
-.arena-mode .phase-steps i{font-size:11px}
+.arena-mode .battle-context{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;color:#e7f3ff;font-size:11px;line-height:18px}
+.arena-mode .battle-context>strong{white-space:nowrap}
+.arena-mode .battle-message{margin:0;min-width:0;height:28px;overflow:hidden;font-size:10px;line-height:14px;color:#d4e4f6;text-align:center}
 .arena-mode .phase-next{
-  min-width:94px;min-height:24px;padding:3px 7px;
+  min-width:0;min-height:44px;padding:3px 4px;
   border:1px solid #6cbcf1;border-radius:6px;
   background:#246290;color:#fff;text-decoration:none;
-  font-size:10px;font-weight:900;pointer-events:auto;
+  font-size:11px;font-weight:900;pointer-events:auto;
 }
 .arena-mode .phase-next:disabled{background:#2a3b50;border-color:#536a84;opacity:.65}
 .arena-mode .resource-status{
-  display:flex;flex:0 0 auto;flex-direction:column;align-items:center;justify-content:center;
-  width:108px;min-width:0;max-width:36%;height:49px;gap:2px;padding:3px;
-  border:1px solid #b7a179;border-radius:8px;
-  background:#1b293fe8;color:#f3ede1;font-size:10px;line-height:1.2;
+  display:flex;flex:0 0 auto;flex-direction:row;align-items:center;gap:5px;
+  width:auto;min-width:0;max-width:none;height:auto;padding:0;
+  border:0;background:none;color:#f3ede1;font-size:10px;line-height:18px;
 }
 .arena-mode .resource-status b{color:#78d5ff}
-.arena-mode .resource-log{display:none}
 /* Deck and grave counts are fully independent of decoration. */
 .arena-mode .arena-piles{
   position:absolute;z-index:3;left:0;right:0;height:62px;pointer-events:none;
@@ -355,7 +345,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   align-items:flex-start;justify-content:flex-start;
   display:flex;gap:0;
   width:100%;height:100%;min-width:0;min-height:0;flex:1;
-  padding:20px 13px 18px;
+  padding:20px 20px 16px;
   overflow-x:auto;overflow-y:hidden;
   scroll-snap-type:x proximity;scroll-padding-left:12px;
   overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch;
@@ -364,7 +354,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
 .arena-mode .card,.arena-mode .card:nth-child(even){
   position:relative;z-index:1;flex:0 0 clamp(72px,23vw,101px);
   display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
-  height:min(100%,175px);min-width:0;min-height:0;margin:0 0 0 -9px;padding:2px;
+  height:min(calc(100% - 12px),164px);min-width:0;min-height:0;margin:0 0 0 -9px;padding:2px;
   border:2px solid #afcdec;border-radius:7px;
   background:linear-gradient(165deg,#7791ab,#344b6a 58%,#15253b);color:#fff;
   box-shadow:0 3px 8px #050b18ca;overflow:visible;
@@ -374,6 +364,9 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
 }
 .arena-mode .card:first-child{margin-left:auto}
 .arena-mode .card:last-child{margin-right:auto}
+.arena-mode .hand[data-layout="scroll"]{gap:8px}
+.arena-mode .hand[data-layout="scroll"] .card{margin-left:0;transform:none}
+.arena-mode .hand[data-layout="scroll"] .card:first-child{margin-left:auto}
 .arena-mode .card.r{border-color:#e2a4a7;background:linear-gradient(#91666e,#583640 58%,#261c32)}
 .arena-mode .card.b{border-color:#a3d5f4;background:linear-gradient(#7596b7,#375a81 58%,#182b47)}
 .arena-mode .card.g{border-color:#acd8b6;background:linear-gradient(#7b9c85,#47674b 58%,#253b2e)}
@@ -401,27 +394,24 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   box-shadow:0 0 0 2px #ddc58f,0 0 15px #7ed5ff;
   transform:translateY(-10px) rotate(0deg);
 }
-/* End-turn action remains alongside the board; card catalog never overlaps HP. */
+/* All three controls are in normal flow; none can cover cards or the pool. */
 .arena-mode .battle-footer{
-  position:absolute;z-index:10;inset:0;
-  display:block;width:100%;height:100%;margin:0;padding:0;pointer-events:none;
+  position:relative;z-index:10;inset:auto;
+  display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.85fr) minmax(0,1fr);
+  gap:5px;width:100%;height:46px;min-height:46px;margin:0;padding:0;pointer-events:none;
 }
-.arena-mode .battle-footer button{display:flex;height:auto;gap:3px;pointer-events:auto}
+.arena-mode .battle-footer button{position:static;display:flex;align-items:center;justify-content:center;width:100%;max-width:none;min-width:0;height:46px!important;min-height:46px;gap:3px;pointer-events:auto;white-space:nowrap}
 .arena-mode .end-button{
-  position:absolute;top:calc(33.5% + 3px);right:max(3px,env(safe-area-inset-right,0px));
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  width:74px;min-width:0;height:66px!important;gap:0;padding:5px;
-  border:3px solid #d7f0ff;border-radius:14px 6px 14px 6px;
+  padding:4px;
+  border:2px solid #9cd4ff;border-radius:8px;
   background:linear-gradient(145deg,#316d9b,#174772);
-  box-shadow:0 0 0 3px #173552,0 0 15px #459ee48c;
-  color:#fff;font-size:14px;line-height:1.16;font-weight:900;text-shadow:0 1px 3px #000c;
+  box-shadow:0 2px 8px #071729;
+  color:#fff;font-size:12px;line-height:1.16;font-weight:900;text-shadow:0 1px 3px #000c;
 }
 .arena-mode .end-button .double-arrow{font-size:12px;color:#bceaff;letter-spacing:0;margin:0}
 .arena-mode .end-button:disabled{opacity:.47;filter:grayscale(.5)}
 .arena-mode .effect-button{
-  position:absolute;top:auto;bottom:calc(33% + 5px);left:max(8px,env(safe-area-inset-left,0px));right:auto;
-  display:flex;align-items:center;justify-content:center;gap:3px;
-  width:auto;min-width:82px;max-width:110px;height:32px!important;padding:3px 7px;
+  padding:3px;
   border:1px solid #76a2c6;border-radius:9px;
   background:#1b3757e9;color:#fff;font-size:10px;
   box-shadow:0 3px 8px #040c1caa;
@@ -450,23 +440,28 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
 .arena-mode .detail .fx em{color:#a75b25}
 .arena-mode .detail .btn.primary{background:#b8e3ff;color:#193d5a}
 .arena-mode .detail .btn.warn{background:#ffe0c3;color:#593c29}
-.arena-mode .detail .dismiss-detail{color:#253c55}
+.arena-mode .detail .dismiss-detail{width:44px;height:44px;min-width:44px;min-height:44px;color:#253c55}
+.arena-mode .detail h2{padding-right:38px}
+@keyframes arena-summon{from{opacity:0;transform:translateY(12px) scale(.86)}to{opacity:1;transform:none}}
+@keyframes arena-crystal{50%{box-shadow:0 0 22px #76daff;filter:brightness(1.4)}}
+@keyframes arena-overdrive{50%{box-shadow:0 0 28px #ffaf42;filter:brightness(1.5)}}
+.arena-mode .unit.fx-summon{animation:arena-summon .3s ease-out}
+.arena-mode .unit.fx-crystal{animation:arena-crystal .35s ease-out}
+.arena-mode .unit.fx-overdrive{animation:arena-overdrive .45s ease-out}
 /* Portrait: three stacked regions. */
 @media(orientation:portrait){
   .arena-mode .arena-player{grid-template-rows:57px minmax(0,1fr)}
   .arena-mode .hand{align-items:flex-start;overflow-x:auto;overflow-y:hidden}
 }
 @media(orientation:portrait) and (max-width:380px){
-  .arena-mode{grid-template-rows:65px minmax(0,1fr) minmax(232px,34%)}
+  .arena-mode{grid-template-rows:60px minmax(0,1fr) minmax(182px,29%)}
   .arena-mode .opponent-head{width:136px;height:52px;padding:1px}
   .arena-mode .opponent-avatar{width:45px;height:45px;min-width:45px}
   .arena-mode .opponent-identity{gap:3px}
   .arena-mode .opponent-turn{width:79px;margin-right:41px;height:46px}
   .arena-mode .opponent-turn strong{font-size:12px}
-  .arena-mode .settings-menu{width:38px;height:39px}
   .arena-mode .opponent-card-back{width:26px;height:44px;flex-basis:26px;margin-left:-13px}
   .arena-mode .opponent-hand-count{top:49px}
-  .arena-mode .arena-table{grid-template-rows:minmax(0,1fr) 61px minmax(0,1fr)}
   .arena-mode .opponent-lane,.arena-mode .player-lane{width:75%}
   .arena-mode .field{gap:4px}
   .arena-mode .arena-player{grid-template-rows:52px minmax(0,1fr)}
@@ -477,23 +472,20 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   .arena-mode .crystal-box{min-width:98px;max-width:44%;gap:1px 2px;padding:2px}
   .arena-mode .crystal-pip{width:8px;height:10px}
   .arena-mode .card{flex-basis:clamp(67px,22vw,84px)}
-  .arena-mode .end-button{width:64px;height:61px!important;font-size:12px}
 }
 @media(orientation:portrait) and (max-height:700px){
-  .arena-mode{grid-template-rows:58px minmax(0,1fr) minmax(205px,35%)}
-  .arena-mode .arena-table{grid-template-rows:minmax(0,1fr) 55px minmax(0,1fr)}
+  .arena-mode{grid-template-rows:58px minmax(0,1fr) 174px}
   .arena-mode .opponent-lane,.arena-mode .player-lane{height:min(90%,105px)}
   .arena-mode .player-head{height:47px}
   .arena-mode .arena-player{grid-template-rows:47px minmax(0,1fr)}
-  .arena-mode .hand{padding-top:17px;padding-bottom:12px}
-  .arena-mode .card{height:min(100%,130px)}
-  .arena-mode .end-button{height:56px!important}
+  .arena-mode .hand{padding-top:18px;padding-bottom:14px}
 }
 /* Landscape: header, tabletop, then a compact row with HUD | hand | utility. */
 @media(orientation:landscape){
+  #app{padding:0}
   .arena-mode{
     max-width:none;
-    grid-template-rows:45px minmax(0,1fr) minmax(103px,27%);
+    grid-template-rows:46px minmax(0,1fr) minmax(90px,25%);
     padding:max(2px,env(safe-area-inset-top,0px)) max(9px,env(safe-area-inset-right,0px))
       max(4px,env(safe-area-inset-bottom,0px)) max(9px,env(safe-area-inset-left,0px));
   }
@@ -508,30 +500,29 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   .arena-mode .opponent-turn{width:108px;height:39px;margin-right:45px}
   .arena-mode .opponent-turn strong{font-size:11px}
   .arena-mode .opponent-turn span{font-size:8px}
-  .arena-mode .settings-menu{width:37px;height:38px;top:max(3px,env(safe-area-inset-top,0px))}
+  .arena-mode .settings-menu{top:max(2px,env(safe-area-inset-top,0px))}
   .arena-mode .arena-table{
-    grid-template-rows:minmax(0,1fr) 43px minmax(0,1fr);
-    width:min(83%,980px);height:100%;
-    transform:perspective(900px) rotateX(5deg);
+    grid-template-rows:minmax(0,1fr) 76px minmax(0,1fr);
+    width:min(96%,980px);height:calc(100% - 4px);
+    transform:none;
   }
-  .arena-mode .opponent-lane,.arena-mode .player-lane{width:min(48%,400px);height:min(94%,91px)}
+  .arena-mode .opponent-lane,.arena-mode .player-lane{width:min(64%,400px);height:min(100%,110px)}
   .arena-mode .field{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
   .arena-mode .arena-compass{width:55px;height:55px;font-size:39px}
   .arena-mode .arena-piles{height:46px}
-  .arena-mode .arena-piles-enemy{top:20%}
-  .arena-mode .arena-piles-player{bottom:20%}
+  .arena-mode .arena-piles-enemy{top:3px}
+  .arena-mode .arena-piles-player{bottom:3px}
   .arena-mode .pile-box{height:43px;min-width:33px;max-width:48px}
   .arena-mode .pile-box>b{font-size:8px}
   .arena-mode .pile-symbol{font-size:13px}
   .arena-mode .pile-value strong{font-size:12px}
-  .arena-mode .middle-panel{width:min(77%,420px)}
-  .arena-mode .phase-rail{flex-direction:row;gap:3px;padding:3px 6px}
-  .arena-mode .phase-rail>strong{font-size:9px}
-  .arena-mode .phase-steps{display:none}
-  .arena-mode .phase-next{min-width:78px;min-height:24px;font-size:9px}
-  .arena-mode .resource-status{height:31px;width:104px;font-size:9px}
+  .arena-mode .middle-panel{width:min(96%,600px)}
+  .arena-mode .progress-panel{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);grid-template-rows:24px 46px;gap:2px 10px}
+  .arena-mode .battle-context{grid-row:1;grid-column:1;font-size:10px}
+  .arena-mode .battle-message{grid-row:1;grid-column:2;height:24px;font-size:9px;line-height:12px;text-align:left}
+  .arena-mode .battle-footer{grid-row:2;grid-column:1/-1}
   .arena-mode .arena-player{
-    display:grid;grid-template-columns:minmax(154px,24%) minmax(0,1fr) 103px;
+    display:grid;grid-template-columns:minmax(154px,24%) minmax(0,1fr);
     grid-template-rows:minmax(0,1fr);
     align-items:center;gap:6px;
   }
@@ -563,26 +554,17 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
     align-items:flex-start;justify-content:flex-start;
     overflow-x:auto;overflow-y:hidden;
     height:100%;min-height:0;min-width:0;
-    padding:13px 9px 7px;
+    padding:15px 18px 12px;
   }
   .arena-mode .card,.arena-mode .card:nth-child(even){
     flex-basis:clamp(57px,8vw,84px);
-    height:calc(100% - 6px);margin-left:-10px;
+    height:calc(100% - 9px);margin-left:-10px;
   }
   .arena-mode .card:first-child{margin-left:auto}
   .arena-mode .card .cost{width:18px;height:18px;font-size:10px}
   .arena-mode .card .card-name{font-size:8px}
   .arena-mode .card .card-stats{font-size:8px;padding:1px}
   .arena-mode .hand-label{top:0;left:4px;height:18px;font-size:9px}
-  .arena-mode .effect-button{
-    left:auto;right:max(9px,env(safe-area-inset-right,0px));
-    bottom:max(8px,env(safe-area-inset-bottom,0px));
-    width:91px;max-width:91px;height:32px!important;
-  }
-  .arena-mode .end-button{
-    top:34%;right:max(7px,env(safe-area-inset-right,0px));
-    width:84px;height:58px!important;font-size:13px;
-  }
   .arena-mode .detail{
     left:auto;right:max(9px,env(safe-area-inset-right,0px));
     bottom:max(6px,env(safe-area-inset-bottom,0px));
@@ -590,15 +572,13 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   }
 }
 @media(orientation:landscape) and (max-height:380px){
-  .arena-mode{grid-template-rows:41px minmax(0,1fr) minmax(97px,27%)}
-  .arena-mode .arena-table{grid-template-rows:minmax(0,1fr) 39px minmax(0,1fr)}
-  .arena-mode .opponent-lane,.arena-mode .player-lane{height:min(94%,77px)}
-  .arena-mode .arena-player{grid-template-columns:minmax(150px,23%) minmax(0,1fr) 96px}
+  .arena-mode{grid-template-rows:44px minmax(0,1fr) 86px}
+  .arena-mode .arena-table{grid-template-rows:minmax(0,1fr) 72px minmax(0,1fr)}
+  .arena-mode .opponent-lane,.arena-mode .player-lane{height:min(100%,77px)}
+  .arena-mode .arena-player{grid-template-columns:minmax(150px,23%) minmax(0,1fr)}
   .arena-mode .player-head{grid-template-rows:40px minmax(0,1fr)}
-  .arena-mode .card,.arena-mode .card:nth-child(even){height:calc(100% - 5px)}
-  .arena-mode .end-button{top:33%;height:52px!important}
 }
 @media(prefers-reduced-motion:reduce){
   .arena-mode .card{transition:none}
-  .arena-mode .unit.tgt,.arena-mode .unit.hit{animation:none}
+  .arena-mode .unit.tgt,.arena-mode .unit.hit,.arena-mode .unit.fx-summon,.arena-mode .unit.fx-crystal,.arena-mode .unit.fx-overdrive{animation:none}
 }

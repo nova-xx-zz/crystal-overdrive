@@ -44,12 +44,16 @@ function boardHTML(s){
   return '<div class="lane-label">'+(s==='c'?'相手の場':'場')+'<small>(バトルフィールド)</small></div>'+fieldHTML(s);
 }
 function progressHTML(){
-  const turn=Math.ceil(S.gameTurn/2),you=S.active==='p';
-  return '<div class="turn-pill">ターン '+turn+'</div>'+
-    '<div class="phase-rail"><strong>'+(S.over?'対戦終了':(you?(S.phase==='main'?'メインフェイズ':'バトルフェイズ'):'相手のターン'))+'</strong>'+
-    '<div class="phase-steps"><span class="'+(S.phase==='main'?'on':'')+'">●<small>メイン</small></span><i>›</i><span class="'+(S.phase==='attack'?'on':'')+'">●<small>バトル</small></span><i>›</i><span>○<small>エンド</small></span></div>'+
-    '<button class="phase-next" data-act="toAttack" '+(myMain()?'':'disabled')+'>攻撃フェイズへ ›</button></div>'+
-    '<div class="resource-status"><span>中央プール <b>◆ '+S.pool+'</b></span><span class="resource-log">'+esc(S.log.at(-1)||'')+'</span></div>';
+  const you=S.active==='p';
+  const message=S.hint || (S.gameTurn===1 ? '先攻の1ターン目は攻撃できません。召喚したらターン終了。' : S.log[S.log.length-1]||'');
+  return '<div class="battle-context"><strong>'+(S.over?'対戦終了':(you?(S.phase==='main'?'メインフェイズ':'バトルフェイズ'):'相手のターン'))+'</strong>'+
+    '<span class="resource-status">中央プール <b>◆ '+S.pool+'</b></span></div>'+
+    '<footer class="battle-footer" aria-label="対戦の操作">'+
+      '<button class="phase-next" data-act="toAttack" '+(myMain()?'':'disabled')+'>攻撃フェイズへ ›</button>'+
+      '<button class="effect-button" data-act="inspect" aria-label="カード一覧・効果確認">カード一覧</button>'+
+      '<button class="end-button" data-act="end" '+(you&&!S.busy&&!S.over?'':'disabled')+'>ターン終了</button>'+
+    '</footer>'+
+    '<div class="battle-message" role="status" aria-live="polite">'+esc(message)+'</div>';
 }
 
 
@@ -76,7 +80,7 @@ function unitHTML(u,side){
   const tgt=!!(S.targeting && side==='c');
   let dots='';
   for(let i=0;i<d.cap+OD_MAX_OVER;i++)dots+='<span class="dot'+(i<u.cr?' on':'')+(i>=d.cap?' ov':'')+'"></span>';
-  return '<button class="unit '+d.attr+(u.tired?' tired':'')+(isOD(u)?' od':'')+(sel?' sel':'')+(tgt?' tgt':'')+(S.flash===u.uid?' hit':'')+'" data-act="unit" data-side="'+side+'" data-uid="'+u.uid+'" aria-pressed="'+sel+'" aria-label="'+esc(d.name)+' パワー'+power(u)+' 結晶'+u.cr+'個'+(tgt?' 対象に指定':'')+'">'+
+  return '<button class="unit '+d.attr+(u.tired?' tired':'')+(isOD(u)?' od':'')+(sel?' sel':'')+(tgt?' tgt':'')+(S.flash===u.uid?' hit':'')+(unitEffects.get(u.uid)||'')+'" data-act="unit" data-side="'+side+'" data-uid="'+u.uid+'" aria-pressed="'+sel+'" aria-label="'+esc(d.name)+' パワー'+power(u)+' 結晶'+u.cr+'個'+(tgt?' 対象に指定':'')+'">'+
     '<span class="unit-top"></span><span class="unit-cost" aria-hidden="true">'+d.cost+'</span><span class="unit-art">'+silhouette(u.id)+'</span><span class="unit-name">'+esc(d.name)+'</span>'+
     '<span class="unit-bottom"><span class="unit-stat"><span aria-hidden="true">⚔</span>'+power(u)+'</span><span class="unit-stat"><span aria-hidden="true">◆</span>'+u.cr+'</span></span>'+
     '<span class="unit-dots">'+dots+'</span>'+(u.tired?'<span class="tag">疲労</span>':'')+'</button>';
@@ -141,9 +145,10 @@ function detailHTML(){
 
 function handHTML(){
   const middle=(S.p.hand.length-1)/2;
-  return '<div class="hand">'+S.p.hand.map((id,i)=>{
+  const fan=S.p.hand.length<=4;
+  return '<div class="hand" data-layout="'+(fan?'fan':'scroll')+'">'+S.p.hand.map((id,i)=>{
     const d=card(id),ok=myMain()&&canPlay('p',i),sel=!!(S.sel&&S.sel.kind==='hand'&&S.sel.i===i);
-    return '<button class="card '+d.attr+(d.type==='spell'?' spell':'')+(ok?'':' dim')+(sel?' sel':'')+'" style="--fan-angle:'+((i-middle)*5)+'deg;--fan-drop:'+(Math.abs(i-middle)*5)+'px" data-act="hand" data-i="'+i+'" aria-pressed="'+sel+'" aria-label="'+esc(d.name)+' コスト'+d.cost+'">'+
+    return '<button class="card '+d.attr+(d.type==='spell'?' spell':'')+(ok?'':' dim')+(sel?' sel':'')+'" style="--fan-angle:'+(fan?(i-middle)*3:0)+'deg;--fan-drop:'+(fan?Math.abs(i-middle)*2:0)+'px" data-act="hand" data-i="'+i+'" aria-pressed="'+sel+'" aria-label="'+esc(d.name)+' コスト'+d.cost+'">'+
      '<span class="cost">'+d.cost+'</span><span class="card-top"></span><span class="card-picture">'+silhouette(id)+'</span>'+
      '<span class="card-name">'+esc(d.name)+'</span><span class="card-stats">'+(d.type==='unit'?d.pow[0]+' / '+d.pow[1]:'マジック')+'</span></button>';
   }).join('')+'</div>';
@@ -219,10 +224,23 @@ function opponentHandHTML(){
   return '<div class="opponent-hand" aria-label="相手の手札'+count+'枚">'+backs+
     '<span class="opponent-hand-count">'+count+'枚</span></div>';
 }
+// Visual state belongs to the UI; it never changes resources or match outcomes.
+let renderedMatch=null, previousUnits=new Map(), unitEffects=new Map();
 function render(){
+  const app=document.getElementById('app');
+  const handScroll=renderedMatch===S.gid ? app.querySelector?.('.hand')?.scrollLeft||0 : 0;
+  const currentUnits=new Map([...S.p.units,...S.c.units].map(u=>[u.uid,{cr:u.cr,od:isOD(u)}]));
+  unitEffects=new Map();
+  if(renderedMatch===S.gid){
+    for(const [uid,u] of currentUnits){
+      const before=previousUnits.get(uid);
+      unitEffects.set(uid,!before?' fx-summon':(!before.od&&u.od?' fx-overdrive':(before.cr!==u.cr?' fx-crystal':'')));
+    }
+  }
+  renderedMatch=S.gid; previousUnits=currentUnits;
   const you=S.active==='p';
   const detailOpen=!!(S.sel || S.targeting);
-  document.getElementById('app').innerHTML =
+  app.innerHTML =
     '<main class="ios-board arena-mode">'+
       '<h1 class="visually-hidden">結晶オーバードライブ</h1>'+
       '<div class="arena-sky" aria-hidden="true"></div>'+
@@ -250,14 +268,12 @@ function render(){
         '</div>'+
         '<div class="hand-box"><span class="hand-label">手札</span>'+handHTML()+'</div>'+
       '</section>'+
-      '<footer class="battle-footer">'+
-        '<button class="effect-button" data-act="inspect"><span class="info-circle">i</span><span>カード効果<small>一覧</small></span></button>'+
-        '<button class="end-button" data-act="end" '+(you&&!S.busy&&!S.over?'':'disabled')+'><span class="double-arrow">▶</span><span>ターン終了</span></button>'+
-      '</footer>'+
       '<div class="detail '+(detailOpen?'open':'')+'" aria-label="選択中のカード詳細" '+(detailOpen?'role="dialog"':'')+'>'+
         '<button class="dismiss-detail" data-act="dismissDetail" aria-label="詳細を閉じる">×</button>'+detailHTML()+
       '</div>'+
     '</main>';
+  const hand=app.querySelector?.('.hand');
+  if(hand) hand.scrollLeft=handScroll;
   document.getElementById('modal-root').innerHTML=modalHTML();
 }
 

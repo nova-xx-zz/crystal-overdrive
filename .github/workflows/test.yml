@@ -7,6 +7,9 @@ on:
       - 'web/**'
       - 'tests/**'
       - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'playwright.config.cjs'
       - '.github/workflows/test.yml'
   push:
     branches: [develop]
@@ -14,6 +17,9 @@ on:
       - 'web/**'
       - 'tests/**'
       - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'playwright.config.cjs'
       - '.github/workflows/test.yml'
 
 permissions:
@@ -33,3 +39,24 @@ jobs:
         run: node scripts/balance-report.cjs --games 100 --seed 20261031
       - name: バランス候補7シナリオ比較（固定シード）
         run: node scripts/balance-scenarios.cjs --games 100 --seed 20261031
+  ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - name: 縦横の実レンダリング・操作・CPU通し対戦
+        run: npm run test:ui
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: battle-ui-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

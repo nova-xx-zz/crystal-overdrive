@@ -191,18 +191,47 @@ test('画面内に装飾だけのカード枠を重複表示せず、各陣営4�
   assert.match(out, /player-lane/);
 });
 
-test('縦横の三区画レイアウトとSafe Areaを保証し、重複する旧位置指定に依存しない', () => {
+test('縦横の三区画とSafe Areaを維持し、中央操作は通常フローに配置する', () => {
   const css = read('web/arena-battle.css');
-  assert.match(css, /grid-template-rows:72px minmax\(0,1fr\) minmax\(245px,33%\)/);
   assert.match(css, /\.arena-mode \.arena-opponent\{\s*grid-column:1;grid-row:1/);
   assert.match(css, /\.arena-mode \.arena-table\{\s*grid-column:1;grid-row:2/);
   assert.match(css, /\.arena-mode \.arena-player\{\s*grid-column:1;grid-row:3/);
-  assert.match(css, /grid-template-rows:45px minmax\(0,1fr\) minmax\(103px,27%\)/);
-  assert.match(css, /grid-template-columns:minmax\(154px,24%\) minmax\(0,1fr\) 103px/);
+  assert.match(css, /\.arena-mode \.battle-footer\{\s*position:relative/);
   assert.match(css, /safe-area-inset-top/);
   assert.match(css, /safe-area-inset-right/);
   assert.match(css, /safe-area-inset-bottom/);
   assert.match(css, /safe-area-inset-left/);
   assert.match(css, /overflow-x:auto;overflow-y:hidden/);
   assert.match(css, /\.arena-mode \.field .landscape-extra\{display:none!important\}/);
+  const out=boot().html();
+  assert.ok(out.indexOf('class="battle-footer"') > out.indexOf('class="middle-panel"'));
+  assert.ok(out.indexOf('class="battle-footer"') < out.indexOf('class="player-lane'));
+});
+
+test('先攻の制約を通常画面に表示し、多い手札は扇形を解除する', () => {
+  const {run,html}=boot();
+  assert.match(html(), /role="status"[^>]*>先攻の1ターン目は攻撃できません/);
+  run('S.p.hand=DECK_LIST.slice(); render()');
+  assert.match(html(), /data-layout="scroll"/);
+  assert.doesNotMatch(html(), /--fan-angle:(?!0deg)/);
+});
+
+test('Array.at未対応のiOS 15初期環境でもターン案内を描画できる', () => {
+  const {run,html}=boot();
+  run('Array.prototype.at=undefined; S.gameTurn=3; render()');
+  assert.match(html(), /対戦開始/);
+});
+
+test('召喚・結晶移動・ODの演出は描画だけで判定を変更しない', () => {
+  const {run,html}=boot();
+  run("S.p.hand=['risu']; playCard('p',0); render()");
+  assert.match(html(), /fx-summon/);
+  run('S.p.units[0].cr=2; render()');
+  assert.match(html(), /fx-crystal/);
+  run('S.p.units[0].cr=3; render()');
+  assert.match(html(), /fx-overdrive/);
+  const before=run('JSON.stringify(S)');
+  run('render()');
+  assert.equal(run('JSON.stringify(S)'),before);
+  assert.doesNotMatch(html(), /fx-overdrive/);
 });
