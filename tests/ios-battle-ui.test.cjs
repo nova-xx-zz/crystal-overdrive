@@ -124,3 +124,54 @@ test('iPhoneの縦・左右横向きをInfo.plistへ冪等に指定できる', (
   assert.equal(withOrientations(patched), patched);
   assert.equal((patched.match(/<key>UISupportedInterfaceOrientations<\/key>/g) || []).length, 1);
 });
+
+test('俯瞰型フィールドは盤面・疑似奥行き・双方の情報・手札を表示する', () => {
+  const out = boot().html();
+  for (const selector of ['arena-mode', 'arena-table', 'arena-compass', 'arena-echo-enemy',
+    'arena-echo-player', 'arena-piles-enemy', 'arena-piles-player', 'opponent-hand',
+    'opponent-lane', 'player-lane', 'hand-box', 'battle-footer']) {
+    assert.ok(out.includes(selector), selector);
+  }
+  assert.match(out, /対戦終了|あなたのターン|相手のターン/);
+  assert.match(out, /data-act="toAttack"/);
+  assert.match(out, /data-act="end"/);
+});
+
+test('3D風の意匠は外部画像を使わず縦横で配置し、手札操作を残す', () => {
+  const html = read('web/index.html');
+  const css = read('web/arena-battle.css');
+  assert.match(html, /<link rel="stylesheet" href=".\/arena-battle.css">/);
+  assert.ok(html.indexOf('arena-battle.css') > html.indexOf('ios-battle.css'), '上書きスタイルが最後');
+  assert.match(css, /perspective\(/);
+  assert.match(css, /@media\(orientation:portrait\)/);
+  assert.match(css, /@media\(orientation:landscape\)/);
+  assert.match(css, /\.arena-mode \.hand\{[^}]*overflow-x:auto/);
+  assert.match(css, /safe-area-inset-top/);
+  assert.match(css, /safe-area-inset-bottom/);
+  assert.doesNotMatch(css, /https?:\/\//, 'オフラインの同梱CSS');
+});
+
+test('HP・相手手札・パワー・搭載結晶は固定イメージでなく実際の対戦値', () => {
+  const { run, html } = boot();
+  run("S.c.hand=['risu','pen']; S.p.life=2; S.p.units=[{uid:741,id:'totsu',cr:2,tired:false,attacked:false}]; render()");
+  const out = html();
+  assert.match(out, /相手の手札2枚/);
+  assert.equal((out.match(/class="opponent-card-back"/g) || []).length, 2);
+  assert.match(out, /残りライフ2/);
+  assert.match(out, /パワー4/);
+  assert.match(out, /⚔<\/span>4/);
+  assert.match(out, /◆<\/span>2/);
+  assert.doesNotMatch(out, /HP\s*20/);
+});
+
+test('メイン操作を引き継ぎ、手札の扇形は枚数によって動的に変化する', async () => {
+  const { run, html, tap } = boot();
+  assert.match(html(), /--fan-angle:/);
+  await tap('hand', { i: '0' });
+  assert.equal(run('S.sel.kind'), 'hand');
+  assert.match(html(), /class="detail open"/);
+  await tap('dismissDetail');
+  assert.equal(run('S.sel'), null);
+  await tap('menu');
+  assert.match(run('S.modal'), /menu/);
+});
