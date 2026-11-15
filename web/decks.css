@@ -1,0 +1,30 @@
+.deck-library{width:min(96vw,900px);max-width:900px;max-height:92dvh;gap:12px}
+.deck-library h3{font-size:20px}
+.deck-library .btn{min-height:44px;padding:8px 12px}
+.deck-notice{margin:0;padding:10px;border:1px solid #ad7857;border-radius:8px;background:#fff0d9;color:#68411c}
+.deck-toolbar,.deck-actions,.deck-filters,.deck-counts{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.deck-toolbar{justify-content:space-between}
+.deck-list{display:grid;gap:8px}
+.deck-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:12px;border:1px solid #b4c3d2;border-radius:10px;background:#e7edf5}
+.deck-summary h4{margin:0;font-size:15px;overflow-wrap:anywhere}
+.deck-summary p{margin:4px 0;color:#4c5d71}
+.deck-summary .deck-actions{grid-column:1/-1}
+.deck-valid{color:#176246;font-weight:800}
+.deck-invalid{color:#963c25;font-weight:800}
+.deck-name,.deck-search,.deck-filters select{min-height:44px;min-width:0;padding:8px;border:1px solid #8b9eb4;border-radius:7px;background:#fff;color:#24344b;font:inherit}
+.deck-name{width:100%}
+.deck-filters{align-items:end}
+.deck-filters label{flex:1 1 100px;font-size:12px}
+.deck-filters input,.deck-filters select{display:block;width:100%}
+.deck-filters .search-filter{flex:2 1 160px}
+.deck-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+.deck-entry{display:grid;grid-template-columns:48px minmax(0,1fr);gap:4px 8px;align-items:center;padding:10px;border:1px solid #a9bbc9;border-left:4px solid #8babbf;border-radius:9px;background:#e9eff5}
+.deck-entry.r{border-left-color:#bf635a}.deck-entry.b{border-left-color:#518db9}.deck-entry.g{border-left-color:#4d9870}
+.deck-entry .card-art{grid-row:1/3;width:48px;height:48px;fill:#708da1}
+.deck-entry h4{margin:0;font-size:14px;overflow-wrap:anywhere}
+.deck-entry p{grid-column:1/-1;margin:0;color:#485a70;font-size:12px}
+.deck-entry .deck-counts{grid-column:1/-1;justify-content:space-between;font-size:12px}
+.deck-entry .btn{min-width:44px}
+.deck-errors{margin:0;padding-left:20px;color:#963c25;font-size:12px}
+.deck-sticky{position:sticky;bottom:-16px;z-index:1;padding:10px 0;background:#f7f8fa;border-top:1px solid #b5c2d1}
+@media(orientation:landscape){.deck-library{max-height:94dvh}}

@@ -156,7 +156,10 @@ function handHTML(){
 
 function modalHTML(){
   const m=S.modal; if(!m) return '';
-  if(m==='menu') return '<div class="modal" role="dialog" aria-modal="true" aria-label="設定メニュー"><div class="modal-box"><h3>設定メニュー</h3><button class="btn" data-act="catalog">カード一覧・効果確認</button><button class="btn" data-act="rules">遊び方</button><button class="btn" data-act="restart">対戦を最初から</button><button class="btn primary" data-act="closeModal">閉じる</button></div></div>';
+  if(m==='decks')return deckLibraryHTML();
+  if(m==='deckEdit')return deckEditorHTML();
+  if(m==='deckDelete')return deckDeleteHTML();
+  if(m==='menu') return '<div class="modal" role="dialog" aria-modal="true" aria-label="設定メニュー"><div class="modal-box"><h3>設定メニュー</h3><button class="btn" data-act="decks" '+(S.busy?'disabled':'')+'>デッキ構築・保存</button><button class="btn" data-act="catalog">カード一覧・効果確認</button><button class="btn" data-act="rules">遊び方</button><button class="btn" data-act="restart">対戦を最初から</button><button class="btn primary" data-act="closeModal">閉じる</button></div></div>';
   if(m==='catalog'){
     const items = Object.values(CARDS).map(d=>{
       const summary = d.type==='unit'
@@ -281,6 +284,7 @@ function render(){
 document.addEventListener('click', async e=>{
   const b=e.target.closest('[data-act]'); if(!b) return;
   const act=b.dataset.act;
+  if(handleDeckAction(act,b.dataset))return;
   if(act==='block'){
     const r=S.blockResolve; if(!r) return;
     S.blockResolve=null; S.modal=null;
@@ -293,7 +297,7 @@ document.addEventListener('click', async e=>{
   if(act==='catalog'){ S.modal='catalog'; render(); return; }
   if(act==='rules'){ S.modal='rules'; render(); return; }
   if(act==='closeModal'){ S.modal=null; render(); return; }
-  if(act==='restart'){ if(S.blockResolve){ const r=S.blockResolve; S.blockResolve=null; r(null); } S.modal=null; uidN=1; newGame(); return; }
+  if(act==='restart'){ beginDeckMatch(); return; }
   if(S.over || S.busy) return;
   S.hint='';
   if(act==='hand'){ S.targeting=null; S.sel={kind:'hand', i:+b.dataset.i}; }
@@ -334,4 +338,6 @@ document.addEventListener('click', async e=>{
   render();
 });
 
-newGame();
+const bootDeck=selectedDeck();
+newGame(deckCheck(bootDeck).valid?bootDeck.cards:DECK_LIST);
+if(!deckCheck(bootDeck).valid){S.modal='decks';render();}

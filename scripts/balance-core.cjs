@@ -7,7 +7,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const WEB = path.join(__dirname, '..', 'web');
-const FILES = ['cards.js', 'game.js', 'ui.js'];
+const FILES = ['cards.js', 'decks.js', 'game.js', 'deck-ui.js', 'ui.js'];
 const SOURCES = FILES.map(file => ({file, source: fs.readFileSync(path.join(WEB, file), 'utf8')}));
 const MAX_TURNS = 50;
 
