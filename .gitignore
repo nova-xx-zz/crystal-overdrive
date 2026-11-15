@@ -4,3 +4,5 @@ node_modules/
 ios/build/
 ios/Pods/
 xcuserdata/
+test-results/
+playwright-report/

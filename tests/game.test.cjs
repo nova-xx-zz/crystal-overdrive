@@ -192,7 +192,7 @@ test('カード選択・ユニット選択にaria-pressedが付く', () => {
 test('マジック対象指定時に対象ボタンの音声ラベルへ案内を追加する', () => {
   const { run, html: getHTML } = boot();
   run("S.p.hand=['kiri']; S.c.units=[{uid:99,id:'risu',cr:2,tired:false,attacked:false}]; S.targeting={i:0}; render();");
-  assert.match(getHTML('app'), /aria-label="火花リス パワー3 対象に指定"/);
+  assert.match(getHTML('app'), /aria-label="火花リス パワー3 結晶2個 対象に指定"/);
 });
 
 test('iPhone用CSSに下部固定操作・セーフエリア・タップ領域を設定する', () => {

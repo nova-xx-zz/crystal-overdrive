@@ -18,8 +18,8 @@ Web版「結晶オーバードライブ」をCapacitor 8のWKWebViewに同梱し
 ```sh
 git clone https://github.com/nova-xx-zz/crystal-overdrive.git
 cd crystal-overdrive
-git switch develop
-git pull --ff-only origin develop
+git switch feature/ios-formal-battle-ui-20261109
+git pull --ff-only origin feature/ios-formal-battle-ui-20261109
 
 node -v
 npm -v
@@ -36,12 +36,13 @@ xcodebuild -version
 npm install
 npm test
 npm run ios:add
-npm run ios:sync
+npm run ios:prepare
 npm run ios:open
 ```
 
 - `ios:add` は**初回だけ**。すでに `ios/App/App.xcodeproj` があるなら実行しない。
-- `ios:sync` は最新の `web/` の資材をネイティブアプリへコピーする。Webコードを更新した後は再実行する。
+- `ios:prepare` は最新の `web/` の資材をネイティブアプリへコピーし、`Info.plist` でiPhoneの縦向き・左右横向きを許可する。Webコードを更新した後は再実行する。
+- `ios:add` 実行前に `ios:prepare` を呼ぶと生成前エラーになる。
 - `ios:open` は生成したiOSプロジェクトをXcodeで開く。
 - 今回は `webDir: "web"` なのでWebのビルド工程は不要。HTML・CSS・JSをそのまま読み込む。
 - `npm install` により生成される `package-lock.json` は今後の再現可能なビルドのため、ネイティブプロジェクトとともにGit管理する。
@@ -72,8 +73,10 @@ npm run ios:open
 - [ ] ネットワーク未接続でもゲームを起動して操作できる（Google Fontsはオフライン時にフォールバック）
 - [ ] 横画面や文字拡大設定で重大な崩れがない
 
+追加されたラフ画準拠の正式バトル画面・縦横レイアウト・ルール差異は [iOS縦横バトルUI.md](iOS縦横バトルUI.md) を参照。
+
 ## GitHub運用
-この準備PRは `feature/ios-capacitor-bootstrap` から `develop` へ統合する。
+マージ済みのCapacitor導入PR #8を前提として、UI実装ブランチ `feature/ios-formal-battle-ui-20261109` から `develop` へ統合する。
 **Macで `npm run ios:add` を実行して生成した `ios/` ネイティブプロジェクトは、次の専用ブランチでレビューしコミットする。**
 最初はビルドと実機動作を優先し、正式名称、アイコン、課金、プライバシー関連は次の公開準備フェーズで設定する。
 `main` のWeb版にはまだ反映しない。
