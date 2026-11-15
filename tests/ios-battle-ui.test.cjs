@@ -127,8 +127,7 @@ test('iPhoneの縦・左右横向きをInfo.plistへ冪等に指定できる', (
 
 test('俯瞰型フィールドは盤面・疑似奥行き・双方の情報・手札を表示する', () => {
   const out = boot().html();
-  for (const selector of ['arena-mode', 'arena-table', 'arena-compass', 'arena-echo-enemy',
-    'arena-echo-player', 'arena-piles-enemy', 'arena-piles-player', 'opponent-hand',
+  for (const selector of ['arena-mode', 'arena-table', 'arena-compass', 'arena-piles-enemy', 'arena-piles-player', 'opponent-hand',
     'opponent-lane', 'player-lane', 'hand-box', 'battle-footer']) {
     assert.ok(out.includes(selector), selector);
   }
@@ -180,4 +179,25 @@ test('ネイティブWebViewの必須UIはネットワークフォントへの�
   const html = read('web/index.html');
   assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
   assert.match(html, /viewport-fit=cover/);
+});
+
+test('画面内に装飾だけのカード枠を重複表示せず、各陣営4スロットとする', () => {
+  const { run, html } = boot();
+  run("S.p.units=[]; S.c.units=[]; render()");
+  const out = html();
+  assert.doesNotMatch(out, /arena-echo-row/);
+  assert.equal((out.match(/class="slot"/g) || []).length, 8);
+  assert.match(out, /opponent-lane/);
+  assert.match(out, /player-lane/);
+});
+
+test('縦横の表示領域を分離し、下端とSafe Areaから手札を保護する', () => {
+  const css = read('web/arena-battle.css');
+  assert.match(css, /\.arena-mode \.player-head\{\s*position:relative;z-index:4/);
+  assert.match(css, /\.arena-mode \.hand\{\s*align-items:flex-start/g);
+  assert.match(css, /bottom:max\(10px,env\(safe-area-inset-bottom,0px\)\)/);
+  assert.match(css, /bottom:max\(6px,env\(safe-area-inset-bottom,0px\)\)/);
+  assert.match(css, /\.arena-mode \.effect-button\{[^}]*bottom:calc\(30% \+ 19px\)/);
+  assert.match(css, /@media\(orientation:landscape\)/);
+  assert.match(css, /\.arena-mode \.card.sel,.arena-mode \.card.sel:nth-child\(even\)/);
 });
