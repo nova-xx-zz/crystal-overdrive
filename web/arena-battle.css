@@ -45,6 +45,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   grid-column:1;grid-row:1;
   position:relative;top:auto;bottom:auto;left:auto;right:auto;z-index:8;
   display:grid;grid-template-columns:auto minmax(60px,1fr) auto;
+  grid-template-rows:minmax(0,1fr);
   gap:3px;align-items:start;
   width:100%;height:100%;padding:2px 0 0;margin:0;
   background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible;
@@ -351,7 +352,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   font-size:10px;line-height:1;
 }
 .arena-mode .hand{
-  align-items:flex-start;justify-content:center;
+  align-items:flex-start;justify-content:flex-start;
   display:flex;gap:0;
   width:100%;height:100%;min-width:0;min-height:0;flex:1;
   padding:20px 13px 18px;
@@ -371,7 +372,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
   transform-origin:50% 110%;touch-action:pan-x;scroll-snap-align:center;
   transition:transform .17s ease,box-shadow .17s ease;
 }
-.arena-mode .card:first-child{margin-left:0}
+.arena-mode .card:first-child{margin-left:auto}
+.arena-mode .card:last-child{margin-right:auto}
 .arena-mode .card.r{border-color:#e2a4a7;background:linear-gradient(#91666e,#583640 58%,#261c32)}
 .arena-mode .card.b{border-color:#a3d5f4;background:linear-gradient(#7596b7,#375a81 58%,#182b47)}
 .arena-mode .card.g{border-color:#acd8b6;background:linear-gradient(#7b9c85,#47674b 58%,#253b2e)}
@@ -558,7 +560,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
     height:100%;min-height:0;min-width:0;
   }
   .arena-mode .hand{
-    align-items:flex-start;justify-content:center;
+    align-items:flex-start;justify-content:flex-start;
     overflow-x:auto;overflow-y:hidden;
     height:100%;min-height:0;min-width:0;
     padding:13px 9px 7px;
@@ -567,7 +569,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
     flex-basis:clamp(57px,8vw,84px);
     height:calc(100% - 6px);margin-left:-10px;
   }
-  .arena-mode .card:first-child{margin-left:0}
+  .arena-mode .card:first-child{margin-left:auto}
   .arena-mode .card .cost{width:18px;height:18px;font-size:10px}
   .arena-mode .card .card-name{font-size:8px}
   .arena-mode .card .card-stats{font-size:8px;padding:1px}
