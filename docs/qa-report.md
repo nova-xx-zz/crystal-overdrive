@@ -1,6 +1,15 @@
 # QA・引き継ぎ
 
-更新: 2026-11-15 JST。M1作業中、PR #10と後続のデッキPRはDraft、マージ/公開不可。
+更新: 2026-11-16 JST。対象PRのユーザー実機確認待ちは解消。M1全体は作業中で、公開は未承認。
+
+## 最新: 実機確認とdevelop統合
+
+- 2026-11-16、ユーザーから「PR10,11問題なかったです」と報告。既報の端末はiPhone 16 / iOS 27.1.2。手札の追加確認を含むPR対象範囲の実機確認待ちを解消し、以前の「まだ確認できていない」「マージ保留」を更新する。
+- 確認対象のアプリ実装はPR #10 `8ea8cf1`、PR #11 `8007162`。以後のこの統合準備では文書だけを変更し、アプリJS/CSSは変更しない。
+- PR #10は2026-11-16にdevelopへマージ済み。マージコミット `8bf196f1fac5b33c0ca5e2a7301ff3796d75c0b5`。事前CI [run 36](https://github.com/nova-xx-zz/crystal-overdrive/actions/runs/43722776765) 成功（Node51件・ブラウザ27件）。
+- PR #11はbaseをdevelopへ変更し、developを取り込んだ状態でCIを再確認して統合する。直前の [run 37](https://github.com/nova-xx-zz/crystal-overdrive/actions/runs/43722932449) はNode62件・ブラウザ39件と既存シミュレーションが成功。最終のマージ/CI結果は [PR #11](https://github.com/nova-xx-zz/crystal-overdrive/pull/11) に記録する。
+- 未解決のGitHubレビュー指摘なし。既存の差分レビュー・独立レビューと、ユーザーの以前の「問題なければマージ」指示を根拠にdevelopへの統合を進める。
+- M1全体の完成、Simulator/Archiveの再現可能なビルド、詳細な性能/VoiceOver計測、TestFlight準備や公開承認の完了とは扱わない。以下は当初の調査と検証の履歴を含む。
 
 ## 開始時調査
 - 新規cloneのため未コミットユーザー変更なし。作業ブランチ `feature/ios-formal-battle-ui-20261109`、開始SHA `23b32eac`。

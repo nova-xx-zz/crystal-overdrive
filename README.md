@@ -14,7 +14,7 @@ Web版の対戦画面では「カード」ボタンから全12種の効果を確
 
 **iOS正式バトル画面**: 俯瞰視点の石造アリーナ、相手／自分のフィールド、扇形手札を縦持ち・横持ちで表示するUIを `web/index.html` に実装しています。見た目は `web/arena-battle.css`、対戦・入力は既存の `web/game.js` / `web/ui.js` に分かれています。設計・ルールとの差異・実機検証項目は [docs/iOS縦横バトルUI.md](docs/iOS縦横バトルUI.md) を参照してください。
 
-製品化は [M1〜M5ロードマップ](docs/release-roadmap.md) に従います。現在は **M1作業中・実機確認待ち** です。設定→「デッキ構築・保存」から20枚デッキの編集・複製・複数保存・削除・検索と選択デッキでのCPU戦を利用できます（[仕様](docs/deck-system.md)）。タイトル、段階チュートリアル、複数難易度、音、無料ガチャ、オンライン、ランキングは未実装です。引き継ぎは [AGENTS.md](AGENTS.md)、[アーキテクチャ](docs/architecture.md)、[QA結果・次の作業](docs/qa-report.md)、[リリース確認表](docs/release-checklist.md) を参照してください。
+製品化は [M1〜M5ロードマップ](docs/release-roadmap.md) に従います。現在は **M1作業中** です。2026-11-16にUI・デッキ機能の対象PRについてユーザーから実機で問題なしと報告されています。設定→「デッキ構築・保存」から20枚デッキの編集・複製・複数保存・削除・検索と選択デッキでのCPU戦を利用できます（[仕様](docs/deck-system.md)）。タイトル、段階チュートリアル、複数難易度、音、無料ガチャ、オンライン、ランキングは未実装です。引き継ぎは [AGENTS.md](AGENTS.md)、[アーキテクチャ](docs/architecture.md)、[QA結果・次の作業](docs/qa-report.md)、[リリース確認表](docs/release-checklist.md) を参照してください。
 
 ## フォルダ構成
 | パス | 内容 |
