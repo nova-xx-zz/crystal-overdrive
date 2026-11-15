@@ -175,3 +175,9 @@ test('メイン操作を引き継ぎ、手札の扇形は枚数によって動�
   await tap('menu');
   assert.match(run('S.modal'), /menu/);
 });
+
+test('ネイティブWebViewの必須UIはネットワークフォントへの依存がない', () => {
+  const html = read('web/index.html');
+  assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
+  assert.match(html, /viewport-fit=cover/);
+});
