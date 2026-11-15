@@ -76,7 +76,7 @@ function unitHTML(u,side){
   const tgt=!!(S.targeting && side==='c');
   let dots='';
   for(let i=0;i<d.cap+OD_MAX_OVER;i++)dots+='<span class="dot'+(i<u.cr?' on':'')+(i>=d.cap?' ov':'')+'"></span>';
-  return '<button class="unit '+d.attr+(u.tired?' tired':'')+(isOD(u)?' od':'')+(sel?' sel':'')+(tgt?' tgt':'')+(S.flash===u.uid?' hit':'')+'" data-act="unit" data-side="'+side+'" data-uid="'+u.uid+'" aria-pressed="'+sel+'" aria-label="'+esc(d.name)+' パワー'+power(u)+(tgt?' 対象に指定':'')+'">'+
+  return '<button class="unit '+d.attr+(u.tired?' tired':'')+(isOD(u)?' od':'')+(sel?' sel':'')+(tgt?' tgt':'')+(S.flash===u.uid?' hit':'')+'" data-act="unit" data-side="'+side+'" data-uid="'+u.uid+'" aria-pressed="'+sel+'" aria-label="'+esc(d.name)+' パワー'+power(u)+' 結晶'+u.cr+'個'+(tgt?' 対象に指定':'')+'">'+
     '<span class="unit-top"></span><span class="unit-cost" aria-hidden="true">'+d.cost+'</span><span class="unit-art">'+silhouette(u.id)+'</span><span class="unit-name">'+esc(d.name)+'</span>'+
     '<span class="unit-bottom"><span class="unit-stat"><span aria-hidden="true">⚔</span>'+power(u)+'</span><span class="unit-stat"><span aria-hidden="true">◆</span>'+u.cr+'</span></span>'+
     '<span class="unit-dots">'+dots+'</span>'+(u.tired?'<span class="tag">疲労</span>':'')+'</button>';
