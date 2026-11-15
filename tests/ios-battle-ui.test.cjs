@@ -191,13 +191,18 @@ test('画面内に装飾だけのカード枠を重複表示せず、各陣営4�
   assert.match(out, /player-lane/);
 });
 
-test('縦横の表示領域を分離し、下端とSafe Areaから手札を保護する', () => {
+test('縦横の三区画レイアウトとSafe Areaを保証し、重複する旧位置指定に依存しない', () => {
   const css = read('web/arena-battle.css');
-  assert.match(css, /\.arena-mode \.player-head\{\s*position:relative;z-index:4/);
-  assert.match(css, /\.arena-mode \.hand\{\s*align-items:flex-start/g);
-  assert.match(css, /bottom:max\(10px,env\(safe-area-inset-bottom,0px\)\)/);
-  assert.match(css, /bottom:max\(6px,env\(safe-area-inset-bottom,0px\)\)/);
-  assert.match(css, /\.arena-mode \.effect-button\{[^}]*bottom:calc\(30% \+ 19px\)/);
-  assert.match(css, /@media\(orientation:landscape\)/);
-  assert.match(css, /\.arena-mode \.card.sel,.arena-mode \.card.sel:nth-child\(even\)/);
+  assert.match(css, /grid-template-rows:72px minmax\(0,1fr\) minmax\(245px,33%\)/);
+  assert.match(css, /\.arena-mode \.arena-opponent\{\s*grid-column:1;grid-row:1/);
+  assert.match(css, /\.arena-mode \.arena-table\{\s*grid-column:1;grid-row:2/);
+  assert.match(css, /\.arena-mode \.arena-player\{\s*grid-column:1;grid-row:3/);
+  assert.match(css, /grid-template-rows:45px minmax\(0,1fr\) minmax\(103px,27%\)/);
+  assert.match(css, /grid-template-columns:minmax\(154px,24%\) minmax\(0,1fr\) 103px/);
+  assert.match(css, /safe-area-inset-top/);
+  assert.match(css, /safe-area-inset-right/);
+  assert.match(css, /safe-area-inset-bottom/);
+  assert.match(css, /safe-area-inset-left/);
+  assert.match(css, /overflow-x:auto;overflow-y:hidden/);
+  assert.match(css, /\.arena-mode \.field .landscape-extra\{display:none!important\}/);
 });
