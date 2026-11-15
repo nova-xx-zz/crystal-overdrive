@@ -480,3 +480,138 @@ html,body{background:#111b2d;color:var(--arena-ink)}
 @media(prefers-reduced-motion:reduce){
   .arena-mode .card{transition:none}
 }
+
+/* iPhone layout refinement (2026-11-15, portrait + landscape inspection):
+   1. Give the tactical rows their own non-overlapping vertical space.
+   2. Keep HUD and cards within the visible/safe viewport.
+   3. Move the card catalog away from the player's life readout.
+   Background decoration does not represent additional playable card slots. */
+.arena-mode .arena-echo-row{display:none}
+.arena-mode .arena-table,.arena-mode .arena-player,.arena-mode .hand,
+.arena-mode .card,.arena-mode .player-head{box-sizing:border-box}
+.arena-mode .opponent-lane{top:21%;height:23%}
+.arena-mode .middle-panel{top:45%;height:10%}
+.arena-mode .player-lane{bottom:20%;height:23%}
+.arena-mode .unit .unit-stat{font-variant-numeric:tabular-nums}
+.arena-mode .player-head{
+  position:relative;z-index:4;white-space:nowrap;
+  box-shadow:0 3px 10px #050c1d80;
+}
+.arena-mode .player-head .life-display{flex-shrink:0}
+.arena-mode .player-head .life-display>b{font-size:10px}
+.arena-mode .player-head .crystal-box{overflow:hidden}
+.arena-mode .hand .card{box-sizing:border-box;flex-shrink:0}
+@media(orientation:portrait){
+  .arena-mode .arena-table{top:12%;bottom:32%}
+  .arena-mode .arena-player{
+    height:30%;
+    bottom:max(10px,env(safe-area-inset-bottom,0px));
+    gap:5px;
+  }
+  .arena-mode .player-head{
+    flex:0 0 55px;height:55px;
+    min-height:55px;padding:0 7px;
+    background:linear-gradient(90deg,#1b324fdc,#1b2e46d6);
+    border:1px solid #7291aa80;
+  }
+  .arena-mode .player-avatar{flex-shrink:0}
+  .arena-mode .player-head>.life-display{margin-right:auto}
+  .arena-mode .player-head .crystal-box{
+    flex:0 1 45%;min-width:104px;max-width:45%;
+    border-color:#729ebc;
+  }
+  .arena-mode .effect-button{
+    left:max(7px,env(safe-area-inset-left,0px));right:auto;
+    top:auto;bottom:calc(30% + 19px);
+    min-width:78px;max-width:110px;height:31px!important;
+    box-shadow:0 2px 7px #06122499;
+  }
+  .arena-mode .hand-box{min-height:0;padding:0 3px}
+  .arena-mode .hand{
+    align-items:flex-start;
+    padding:17px 12px 12px;
+    overflow-x:auto;overflow-y:hidden;
+    scroll-padding-left:12px;
+  }
+  .arena-mode .card,.arena-mode .card:nth-child(even){
+    height:calc(100% - 40px);
+    min-height:65px;
+    margin-left:-8px;
+    transform:translateY(var(--fan-drop,0px)) rotate(var(--fan-angle,0deg));
+  }
+  .arena-mode .card:first-child{margin-left:0}
+  .arena-mode .card.sel,.arena-mode .card.sel:nth-child(even){
+    transform:translateY(-12px) rotate(0deg)
+  }
+  .arena-mode .hand-label{top:0}
+}
+@media(orientation:portrait) and (max-width:380px){
+  .arena-mode .player-head{gap:3px;padding:0 4px}
+  .arena-mode .player-avatar{width:45px;height:45px;flex-basis:45px}
+  .arena-mode .player-name{font-size:9px}
+  .arena-mode .player-head>.life-display>strong{font-size:23px}
+  .arena-mode .player-head .crystal-box{min-width:96px;max-width:43%;padding:2px}
+  .arena-mode .crystal-pip{width:8px;height:10px}
+  .arena-mode .card{flex-basis:clamp(64px,18vw,75px)}
+}
+@media(orientation:portrait) and (max-height:700px){
+  .arena-mode .arena-table{top:13%;bottom:34%}
+  .arena-mode .arena-player{height:31%;bottom:max(6px,env(safe-area-inset-bottom,0px))}
+  .arena-mode .player-head{flex-basis:46px;height:46px;min-height:46px}
+  .arena-mode .player-avatar{width:40px;height:40px;flex-basis:40px}
+  .arena-mode .effect-button{bottom:calc(31% + 12px)}
+  .arena-mode .hand{padding-top:15px;padding-bottom:9px}
+  .arena-mode .card{height:calc(100% - 30px);min-height:45px}
+}
+@media(orientation:landscape){
+  .arena-mode .arena-table{
+    top:9%;bottom:19%;
+    left:max(15%,env(safe-area-inset-left,0px));
+    right:max(15%,env(safe-area-inset-right,0px));
+  }
+  .arena-mode .opponent-lane{top:17%;height:27%}
+  .arena-mode .middle-panel{top:45%;height:10%}
+  .arena-mode .player-lane{bottom:17%;height:27%}
+  .arena-mode .arena-player{
+    height:29%;
+    bottom:max(6px,env(safe-area-inset-bottom,0px));
+  }
+  .arena-mode .player-head{
+    width:28%;min-width:0;min-height:0;
+    height:44px;bottom:0;
+    padding:2px 3px;background:#1b314ccf;
+  }
+  .arena-mode .player-head .life-display{gap:2px}
+  .arena-mode .player-head .life-display>strong{font-size:21px}
+  .arena-mode .crystal-box{
+    bottom:44px;left:4px;max-width:calc(100% - 8px);
+    min-height:29px;
+  }
+  .arena-mode .hand-box{bottom:0;min-height:0;overflow:visible}
+  .arena-mode .hand{
+    align-items:flex-start;gap:0;
+    padding:15px 9px 4px;
+    overflow-x:auto;overflow-y:hidden;
+  }
+  .arena-mode .card,.arena-mode .card:nth-child(even){
+    height:calc(100% - 27px);
+    min-height:44px;
+    margin-left:-9px;
+    transform:translateY(var(--fan-drop,0px)) rotate(var(--fan-angle,0deg));
+  }
+  .arena-mode .card:first-child{margin-left:0}
+  .arena-mode .card.sel,.arena-mode .card.sel:nth-child(even){
+    transform:translateY(-11px) rotate(0deg);
+  }
+  .arena-mode .effect-button{bottom:4%;right:max(8px,env(safe-area-inset-right,0px))}
+  .arena-mode .end-button{top:44%;height:58px!important}
+}
+@media(orientation:landscape) and (max-height:380px){
+  .arena-mode .arena-table{top:8%;bottom:18%}
+  .arena-mode .arena-player{height:27%;bottom:max(4px,env(safe-area-inset-bottom,0px))}
+  .arena-mode .player-head{height:37px}
+  .arena-mode .crystal-box{bottom:37px;min-height:26px}
+  .arena-mode .hand{padding:13px 5px 3px}
+  .arena-mode .card{height:calc(100% - 24px);min-height:36px}
+  .arena-mode .end-button{top:42%;height:48px!important}
+}
