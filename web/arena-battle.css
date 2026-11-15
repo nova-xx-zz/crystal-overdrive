@@ -406,7 +406,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#0d182
 }
 .arena-mode .battle-footer button{display:flex;height:auto;gap:3px;pointer-events:auto}
 .arena-mode .end-button{
-  position:absolute;top:46%;right:max(3px,env(safe-area-inset-right,0px));
+  position:absolute;top:calc(33.5% + 3px);right:max(3px,env(safe-area-inset-right,0px));
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   width:74px;min-width:0;height:66px!important;gap:0;padding:5px;
   border:3px solid #d7f0ff;border-radius:14px 6px 14px 6px;
