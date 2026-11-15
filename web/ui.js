@@ -77,8 +77,8 @@ function unitHTML(u,side){
   let dots='';
   for(let i=0;i<d.cap+OD_MAX_OVER;i++)dots+='<span class="dot'+(i<u.cr?' on':'')+(i>=d.cap?' ov':'')+'"></span>';
   return '<button class="unit '+d.attr+(u.tired?' tired':'')+(isOD(u)?' od':'')+(sel?' sel':'')+(tgt?' tgt':'')+(S.flash===u.uid?' hit':'')+'" data-act="unit" data-side="'+side+'" data-uid="'+u.uid+'" aria-pressed="'+sel+'" aria-label="'+esc(d.name)+' パワー'+power(u)+(tgt?' 対象に指定':'')+'">'+
-    '<span class="unit-top"></span><span class="unit-art">'+silhouette(u.id)+'</span><span class="unit-name">'+esc(d.name)+'</span>'+
-    '<span class="unit-bottom"><span class="unit-stat">'+power(u)+'</span><span class="unit-stat">'+u.cr+'</span></span>'+
+    '<span class="unit-top"></span><span class="unit-cost" aria-hidden="true">'+d.cost+'</span><span class="unit-art">'+silhouette(u.id)+'</span><span class="unit-name">'+esc(d.name)+'</span>'+
+    '<span class="unit-bottom"><span class="unit-stat"><span aria-hidden="true">⚔</span>'+power(u)+'</span><span class="unit-stat"><span aria-hidden="true">◆</span>'+u.cr+'</span></span>'+
     '<span class="unit-dots">'+dots+'</span>'+(u.tired?'<span class="tag">疲労</span>':'')+'</button>';
 }
 function fieldHTML(s){
@@ -140,9 +140,10 @@ function detailHTML(){
 }
 
 function handHTML(){
+  const middle=(S.p.hand.length-1)/2;
   return '<div class="hand">'+S.p.hand.map((id,i)=>{
     const d=card(id),ok=myMain()&&canPlay('p',i),sel=!!(S.sel&&S.sel.kind==='hand'&&S.sel.i===i);
-    return '<button class="card '+d.attr+(d.type==='spell'?' spell':'')+(ok?'':' dim')+(sel?' sel':'')+'" data-act="hand" data-i="'+i+'" aria-pressed="'+sel+'" aria-label="'+esc(d.name)+' コスト'+d.cost+'">'+
+    return '<button class="card '+d.attr+(d.type==='spell'?' spell':'')+(ok?'':' dim')+(sel?' sel':'')+'" style="--fan-angle:'+((i-middle)*5)+'deg;--fan-drop:'+(Math.abs(i-middle)*5)+'px" data-act="hand" data-i="'+i+'" aria-pressed="'+sel+'" aria-label="'+esc(d.name)+' コスト'+d.cost+'">'+
      '<span class="cost">'+d.cost+'</span><span class="card-top"></span><span class="card-picture">'+silhouette(id)+'</span>'+
      '<span class="card-name">'+esc(d.name)+'</span><span class="card-stats">'+(d.type==='unit'?d.pow[0]+' / '+d.pow[1]:'マジック')+'</span></button>';
   }).join('')+'</div>';
@@ -211,43 +212,57 @@ function modalHTML(){
   return '';
 }
 
-/* ===== Capacitor iOS 正式対戦画面：ラフ画準拠（縦横レスポンシブ） ===== */
+/* ===== 俯瞰視点のiOS正式バトル画面（既存ゲームロジックを維持） ===== */
+function opponentHandHTML(){
+  const count=S.c.hand.length, shown=Math.min(count,7);
+  const backs=Array.from({length:shown},()=>'<span class="opponent-card-back" aria-hidden="true">✦</span>').join('');
+  return '<div class="opponent-hand" aria-label="相手の手札'+count+'枚">'+backs+
+    '<span class="opponent-hand-count">'+count+'枚</span></div>';
+}
+function decorativeSlots(){
+  return '<span></span><span></span><span></span><span></span>';
+}
 function render(){
   const you=S.active==='p';
   const detailOpen=!!(S.sel || S.targeting);
-  document.getElementById('app').innerHTML = '<main class="ios-board">'+
-    '<h1 class="visually-hidden">結晶オーバードライブ</h1>'+
-    '<button class="settings-menu" data-act="menu" aria-label="設定メニュー"><span class="hamburger">☰</span><small>設定<br>メニュー</small></button>'+
-    '<section class="opponent-panel battlefield-panel" aria-label="相手の情報と場">'+
-      '<span class="side-flag">相手</span>'+
-      '<div class="opponent-head">'+
-       '<div class="opponent-deck">'+deckBadge('c')+'</div>'+
-       '<div class="opponent-avatar avatar-ring">'+portraitIcon(true)+'</div>'+
-       '<div class="opponent-right">'+lifeBadge('c')+graveBadge('c')+'</div>'+
+  document.getElementById('app').innerHTML =
+    '<main class="ios-board arena-mode">'+
+      '<h1 class="visually-hidden">結晶オーバードライブ</h1>'+
+      '<div class="arena-sky" aria-hidden="true"></div>'+
+      '<section class="opponent-panel arena-opponent" aria-label="相手の情報">'+
+        '<div class="opponent-head">'+
+          '<div class="opponent-avatar avatar-ring">'+portraitIcon(true)+'</div>'+
+          '<div class="opponent-identity"><span class="player-name">CPU</span>'+lifeBadge('c')+'</div>'+
+        '</div>'+opponentHandHTML()+
+        '<div class="opponent-turn"><strong>ターン '+Math.ceil(S.gameTurn/2)+'</strong><span>'+(S.over?'対戦終了':(you?'あなたのターン':'相手のターン'))+'</span></div>'+
+      '</section>'+
+      '<button class="settings-menu" data-act="menu" aria-label="設定メニュー"><span class="hamburger">⚙</span><small>設定</small></button>'+
+      '<section class="battlefield-panel arena-table" aria-label="俯瞰バトルフィールド">'+
+        '<div class="arena-rim" aria-hidden="true"></div>'+
+        '<div class="arena-echo-row arena-echo-enemy" aria-hidden="true">'+decorativeSlots()+'</div>'+
+        '<div class="opponent-lane lane">'+boardHTML('c')+'</div>'+
+        '<div class="middle-panel"><div class="progress-panel">'+progressHTML()+'</div></div>'+
+        '<div class="arena-compass" aria-hidden="true">✦</div>'+
+        '<div class="player-lane lane">'+boardHTML('p')+'</div>'+
+        '<div class="arena-echo-row arena-echo-player" aria-hidden="true">'+decorativeSlots()+'</div>'+
+        '<div class="arena-piles arena-piles-enemy">'+deckBadge('c')+graveBadge('c')+'</div>'+
+        '<div class="arena-piles arena-piles-player">'+deckBadge('p')+graveBadge('p')+'</div>'+
+      '</section>'+
+      '<section class="player-panel arena-player" aria-label="自分の情報と手札">'+
+        '<div class="player-head">'+
+          '<span class="player-avatar avatar-ring">'+portraitIcon(false)+'</span>'+
+          '<span class="player-name">あなた</span>'+lifeBadge('p')+crystalBadge('p')+
+        '</div>'+
+        '<div class="hand-box"><span class="hand-label">手札</span>'+handHTML()+'</div>'+
+      '</section>'+
+      '<footer class="battle-footer">'+
+        '<button class="effect-button" data-act="inspect"><span class="info-circle">i</span><span>カード効果<small>一覧</small></span></button>'+
+        '<button class="end-button" data-act="end" '+(you&&!S.busy&&!S.over?'':'disabled')+'><span class="double-arrow">▶</span><span>ターン終了</span></button>'+
+      '</footer>'+
+      '<div class="detail '+(detailOpen?'open':'')+'" aria-label="選択中のカード詳細" '+(detailOpen?'role="dialog"':'')+'>'+
+        '<button class="dismiss-detail" data-act="dismissDetail" aria-label="詳細を閉じる">×</button>'+detailHTML()+
       '</div>'+
-      '<div class="opponent-lane lane">'+boardHTML('c')+'</div>'+
-    '</section>'+
-    '<section class="middle-panel battlefield-panel" aria-label="ターンとバトルフィールド">'+
-      '<div class="progress-panel">'+progressHTML()+'</div>'+
-      '<div class="player-lane lane">'+boardHTML('p')+'</div>'+
-    '</section>'+
-    '<section class="player-panel battlefield-panel" aria-label="自分の情報と手札">'+
-      '<span class="side-flag">自分</span>'+
-      '<div class="player-head">'+
-       '<span class="player-avatar avatar-ring">'+portraitIcon(false)+'</span>'+
-       lifeBadge('p')+crystalBadge('p')+
-      '</div>'+
-      '<div class="player-piles">'+deckBadge('p')+graveBadge('p')+'</div>'+
-      '<div class="hand-box"><span class="hand-label">手札<small>(ハンド)</small></span>'+handHTML()+'</div>'+
-    '</section>'+
-    '<footer class="battle-footer">'+
-      '<button class="effect-button" data-act="inspect"><span class="info-circle">i</span><span>効果確認<small>(詳細)</small></span></button>'+
-      '<button class="end-button" data-act="end" '+(you&&!S.busy&&!S.over?'':'disabled')+'><span class="double-arrow">▶▶</span> ターン終了</button>'+
-    '</footer>'+
-    '<div class="detail '+(detailOpen?'open':'')+'" aria-label="選択中のカード詳細" '+(detailOpen?'role="dialog"':'')+'>'+
-      '<button class="dismiss-detail" data-act="dismissDetail" aria-label="詳細を閉じる">×</button>'+detailHTML()+
-    '</div>'+
-   '</main>';
+    '</main>';
   document.getElementById('modal-root').innerHTML=modalHTML();
 }
 
