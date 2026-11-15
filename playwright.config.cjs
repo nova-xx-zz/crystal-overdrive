@@ -1,5 +1,6 @@
 'use strict';
 const {defineConfig} = require('@playwright/test');
+const chromiumLaunchOptions=process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? {executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH} : {};
 
 module.exports = defineConfig({
   testDir: './tests/browser',
@@ -11,8 +12,9 @@ module.exports = defineConfig({
   reporter: [['list'], ['html', {open: 'never'}]],
   use: {baseURL:'http://127.0.0.1:4173', trace:'retain-on-failure', screenshot:'only-on-failure', reducedMotion:'reduce'},
   projects: [
-    {name:'chromium', use:{browserName:'chromium', launchOptions:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? {executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH} : {}}},
-    {name:'webkit', use:{browserName:'webkit'}},
+    {name:'chromium', testIgnore:'**/touch-swipe.spec.cjs', use:{browserName:'chromium', launchOptions:chromiumLaunchOptions}},
+    {name:'webkit', testIgnore:'**/touch-swipe.spec.cjs', use:{browserName:'webkit'}},
+    {name:'chromium-touch', testMatch:'**/touch-swipe.spec.cjs', use:{browserName:'chromium', launchOptions:chromiumLaunchOptions, viewport:{width:393,height:852}, isMobile:true, hasTouch:true}},
   ],
   webServer: {command:'node scripts/serve-web.cjs', url:'http://127.0.0.1:4173', reuseExistingServer:!process.env.CI},
 });
