@@ -11,14 +11,16 @@
 | `web/index.html` | Web画面の入口。CSSとJavaScriptを指定順で読み込む |
 | `web/styles.css` | iPhone向け縦画面を含む見た目・アニメーション |
 | `web/cards.js` | 12種のカード定義、効果説明、初期デッキ、基本パラメータ |
+| `web/decks.js` | DOM非依存のデッキ検証とバージョン付きプロフィール保存 |
 | `web/game.js` | 対戦状態、召喚、結晶移動、攻撃、ターン進行、CPU、ブロック待機 |
+| `web/deck-ui.js` | デッキ編集/検索/複数保存、選択デッキでの開始、削除/バックアップ |
 | `web/ui.js` | HTML描画、モーダル、カード選択、タップ処理、対戦初期化 |
 | `tests/game.test.cjs` | ゲームロジックと画面入口の回帰テスト |
 
 ## 読み込み順（重要）
-`index.html` で **cards.js → game.js → ui.js** の順に読み込む。
+`index.html` で **cards.js → decks.js → game.js → deck-ui.js → ui.js** の順に読み込む。
 現在はブラウザの従来型 `script` を使用し、3ファイルは同一のグローバルなJavaScript環境に属する。
-`ui.js` の末尾で `newGame()` を呼び、ゲーム画面の初期化を行う。
+`ui.js` の末尾で保存デッキを検証して `newGame(playerDeck)` を呼び、無効/未選択ならデッキ一覧を開く。
 
 この方式は `file://` でHTMLを直接開く従来のローカル確認と、GitHub Pagesでの静的公開を維持するための中間構成。
 ES Modules（`type="module"`）へ切り替える場合はローカルHTTPサーバーと実行環境を再設計すること。

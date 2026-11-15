@@ -11,7 +11,7 @@ const WEB_DIR = path.join(__dirname, '..', 'web');
 const html = fs.readFileSync(path.join(WEB_DIR, 'index.html'), 'utf8');
 const scriptSources = [...html.matchAll(/<script\s+src="([^"]+)"\s*><\/script>/g)]
   .map(match => match[1]);
-const expectedScripts = ['./cards.js', './game.js', './ui.js'];
+const expectedScripts = ['./cards.js', './decks.js', './game.js', './deck-ui.js', './ui.js'];
 if (JSON.stringify(scriptSources) !== JSON.stringify(expectedScripts)) {
   throw new Error('Web版のスクリプト読み込み順が想定と異なります');
 }
@@ -157,9 +157,9 @@ test('カードを選択して対象ユニットを指定するとマジック�
   assert.equal(run('S.p.hot'), 2);
 });
 
-test('HTMLがCSSとスクリプト3本を正しい順で参照している', () => {
+test('HTMLがCSSとスクリプト5本を正しい順で参照している', () => {
   assert.match(html, /<link rel="stylesheet" href="\.\/styles\.css">/);
-  assert.deepEqual(scriptSources, ['./cards.js', './game.js', './ui.js']);
+  assert.deepEqual(scriptSources, ['./cards.js', './decks.js', './game.js', './deck-ui.js', './ui.js']);
   assert.match(fs.readFileSync(path.join(WEB_DIR, 'styles.css'), 'utf8'), /\.unit\.od/);
   assert.doesNotMatch(html, /<script>([\s\S]*?)<\/script>/);
 });

@@ -33,7 +33,7 @@ test('iOSで必要なローカルのCSSとJSファイルがすべて存在する
     ...[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(x => x[1]),
     ...[...html.matchAll(/<link[^>]*rel="stylesheet"[^>]*href="(\.\/[^"]+)"/g)].map(x => x[1]),
   ];
-  assert.deepEqual(paths.filter(x=>x.endsWith('.js')), ['./cards.js', './game.js', './ui.js']);
+  assert.deepEqual(paths.filter(x=>x.endsWith('.js')), ['./cards.js', './decks.js', './game.js', './deck-ui.js', './ui.js']);
   assert.ok(paths.includes('./styles.css'));
   for (const src of paths) {
     assert.ok(src.startsWith('./'), src + ' はアプリに同梱される相対パスにする');

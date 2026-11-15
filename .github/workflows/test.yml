@@ -2,7 +2,7 @@ name: Webゲーム自動テスト
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [develop, main, 'feature/**']
     paths:
       - 'web/**'
       - 'tests/**'

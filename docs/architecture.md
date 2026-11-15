@@ -6,17 +6,17 @@
 |---|---|---|
 | Card Master | `web/cards.js`、12種と効果/定数 | 安定したIDの読み取り専用マスター。所有数・確率・アカウントを含めない |
 | Game Engine | `web/game.js`、状態/ルール/CPU/待機 | `createMatch({decks, rng})`、`applyAction(state, action)` → 新状態・イベント・選択要求 |
-| Deck Management | 固定 `DECK_LIST` | 純粋な20枚/同名2枚/所有数検証、複数デッキの操作 |
-| Collection | なし | マスターと独立した cardId → count、出所/同期世代 |
+| Deck Management | `web/decks.js` の純粋な検証、`web/deck-ui.js` の複数デッキ操作 | デッキを検証して `newGame(playerDeck)` へ渡す。初期/CPUの `DECK_LIST` と分離 |
+| Collection | 初期試用の cardId → count / source をプロフィールに分離 | M2で獲得・消費/救済を追加。M3の正規所有へ無条件で昇格させない |
 | Gacha | なし | 確率設定と注入乱数、原子的な通貨/所有の更新 |
 | Matchmaking | なし | M3サーバーのキュー・ルーム・復帰 |
 | Ranking | なし | M4の確定勝敗を一度だけ集計 |
-| UI | `web/ui.js`、CSS3層、グローバルscript | 操作要求の送信、選択/モーダル/スクロール/演出を担当 |
-| Persistence | なし | バージョン付き保存、検証・移行・失敗通知。M3ではサーバー同期 |
+| UI | `web/ui.js` / `web/deck-ui.js`、バトルCSS3層＋デッキCSS、グローバルscript | 操作要求の送信、選択/モーダル/スクロール/演出を担当 |
+| Persistence | `web/decks.js` のv1ローカル保存・検証・失敗通知・競合検出・バックアップ | 旧版移行は未実装。設定とM3の同期は後続 |
 
 ## 段階的な共通エンジン化
 1. M1 UI修正ではカードや判定を変えず、描画の差分から演出を付ける。
-2. デッキ検証をDOM非依存の純粋関数として導入。`newGame` に検証済みデッキを渡す入口を追加する。
+2. デッキ検証をDOM非依存の純粋関数として導入し、`newGame` に検証済みデッキを渡す入口を追加した。
 3. `plus/minus` がUIで直接結晶を変更する箇所、`render`、タイマー、`askBlock` のPromiseをアダプターへ移す。CPUも公開情報と自分の手札だけを受け取る。
 4. 乱数を注入し、ターン/行動の検証、ブロック待ちを明示的状態にする。操作からイベント列を再現する回帰テストを先に固定する。
 5. M3で必要な型と共有パッケージを段階導入。TS化そのものを目的にせず、既存の冷却・OD等を共通実装として移す。

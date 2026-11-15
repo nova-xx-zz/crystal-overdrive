@@ -6,11 +6,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const alive = g => S.gid===g && !S.over;
 const other = s => s === 'p' ? 'c' : 'p';
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function newSide(name){ return {name, life:START_LIFE, stock:START_STOCK, hot:0, cool:0, grave:0, deck:shuffle(DECK_LIST.slice()), hand:[], units:[]}; }
+function newSide(name,deck=DECK_LIST){ return {name, life:START_LIFE, stock:START_STOCK, hot:0, cool:0, grave:0, deck:shuffle(deck.slice()), hand:[], units:[]}; }
 
-function newGame(){
+function newGame(playerDeck=DECK_LIST){
+  if(!DeckSystem.validateDeck(playerDeck,CARDS).valid) throw new Error('対戦には有効な20枚デッキが必要です');
   GID++;
-  S = {gid:GID, gameTurn:1, active:'p', phase:'main', pool:0, p:newSide('あなた'), c:newSide('CPU'),
+  S = {gid:GID, gameTurn:1, active:'p', phase:'main', pool:0, p:newSide('あなた',playerDeck), c:newSide('CPU'),
        sel:null, targeting:null, log:[], busy:false, over:null, hint:'', flash:null, blockResolve:null, modal:null};
   for(let i=0;i<START_HAND;i++){ drawCard('p'); drawCard('c'); }
   log('対戦開始！あなたの先攻です');

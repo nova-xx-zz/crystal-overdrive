@@ -20,7 +20,7 @@ function boot() {
     addEventListener(type, handler) { handlers[type] = handler; },
   };
   const context = vm.createContext({ document, setTimeout() {} });
-  for (const file of ['cards.js', 'game.js', 'ui.js']) {
+  for (const file of ['cards.js', 'decks.js', 'game.js', 'deck-ui.js', 'ui.js']) {
     vm.runInContext(read('web/' + file), context, { filename: file });
   }
   return {
